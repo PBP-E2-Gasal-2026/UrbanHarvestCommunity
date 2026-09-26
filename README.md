@@ -1,5 +1,20 @@
 # Urban Harvest Community
 
+## Menjalankan halaman awal
+
+Proyek memakai Django dengan app `main`, template global di `templates/`, dan aset CSS di `static/css/`, mengikuti pola repo [myportofolio](https://github.com/Adriannathan89/myportofolio). Tailwind CSS v4 dibangun dari `static/css/input.css` ke `static/css/style.css`.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+npm ci
+npm run build:css
+python manage.py runserver
+```
+
+Buka `http://127.0.0.1:8000/` untuk melihat halaman **Hello world!**. Selama mengubah kelas Tailwind di template, jalankan `npm run watch:css` di terminal lain agar CSS dibangun ulang otomatis.
+
 ## Checkpoint 1
 
 ## 1. Deskripsi Aplikasi
