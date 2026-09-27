@@ -1,10 +1,10 @@
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.sessions.models import Session as DjangoSession
 from django.db import transaction
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import RegistrationForm
+from .forms import LoginForm, RegistrationForm
 from .models import Role, Session, User
 
 
@@ -43,10 +43,9 @@ def login_view(request):
         return redirect('main:show_main')
 
     if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '')
-        user = authenticate(request, username=username, password=password)
-        if user is not None and user.roles.filter(name='user').exists():
+        form = LoginForm(request.POST, request=request)
+        if form.is_valid():
+            user = form.get_user()
             with transaction.atomic():
                 User.objects.select_for_update().get(pk=user.pk)
                 _revoke_sessions(user)
@@ -58,9 +57,10 @@ def login_view(request):
                     expires_at=request.session.get_expiry_date(),
                 )
             return redirect('main:show_main')
-        return render(request, 'login.html', {'error': 'Username atau password tidak valid.'})
+    else:
+        form = LoginForm()
 
-    return render(request, 'login.html')
+    return render(request, 'login.html', {'form': form})
 
 
 @require_POST

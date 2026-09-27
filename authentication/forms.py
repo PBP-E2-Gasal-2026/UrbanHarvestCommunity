@@ -1,8 +1,33 @@
 from django import forms
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from .models import User
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=100, label='Username')
+    password = forms.CharField(widget=forms.PasswordInput, label='Password')
+
+    def __init__(self, *args, request=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+        self.user = None
+
+    def clean(self):
+        data = super().clean()
+        username = data.get('username')
+        password = data.get('password')
+        if username and password:
+            user = authenticate(self.request, username=username, password=password)
+            if user is None or not user.roles.filter(name='user').exists():
+                raise forms.ValidationError('Username atau password tidak valid.')
+            self.user = user
+        return data
+
+    def get_user(self):
+        return self.user
 
 
 class RegistrationForm(forms.Form):
