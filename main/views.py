@@ -7,4 +7,3 @@ def show_main(request):
     }
     return render(request, 'landing.html', context)
 
-# Create your views here.

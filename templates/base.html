@@ -16,18 +16,34 @@
     </style>
     {% block meta %}{% endblock %}
 </head>
-<body class="min-h-screen flex flex-col bg-white text-slate-900 antialiased selection:bg-emerald-500 selection:text-white">
-    <!-- Navbar Reusable Component -->
+<body class="min-h-screen flex flex-col bg-[#080c09] text-white antialiased selection:bg-emerald-500 selection:text-white">
     {% include 'includes/navbar.html' %}
 
-    <!-- Main Content Area -->
     <main class="flex-grow">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer Reusable Component -->
     {% include 'includes/footer.html' %}
 
     {% block extra_js %}{% endblock %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const iconOpen = document.getElementById('menu-icon-open');
+            const iconClose = document.getElementById('menu-icon-close');
+
+            if (menuBtn && mobileMenu) {
+                menuBtn.addEventListener('click', function () {
+                    const isHidden = mobileMenu.classList.toggle('hidden');
+                    if (iconOpen && iconClose) {
+                        iconOpen.classList.toggle('hidden', !isHidden);
+                        iconClose.classList.toggle('hidden', isHidden);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

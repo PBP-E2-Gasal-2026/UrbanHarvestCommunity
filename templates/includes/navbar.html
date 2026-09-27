@@ -1,6 +1,5 @@
 <header class="absolute top-0 left-0 right-0 z-50 pt-5 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <!-- Logo / Brand -->
         <a href="{% url 'main:show_main' %}" class="flex items-center gap-2.5 text-white group">
             <div class="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-emerald-400 group-hover:bg-white/20 transition-all">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -10,7 +9,6 @@
             <span class="text-lg font-bold tracking-tight text-white drop-shadow-sm">Urban Harvest</span>
         </a>
 
-        <!-- Center Floating Pill Nav (Desktop) -->
         <nav class="hidden md:flex items-center gap-1 bg-black/40 backdrop-blur-xl border border-white/15 px-2 py-1.5 rounded-full shadow-2xl">
             <a href="{% url 'main:show_main' %}" class="px-4 py-1.5 rounded-full text-xs font-semibold text-slate-900 bg-white shadow-sm transition-all">
                 Beranda
@@ -30,7 +28,6 @@
             </a>
         </nav>
 
-        <!-- Right CTA Button -->
         <div class="hidden md:flex items-center gap-3">
             {% if user.is_authenticated %}
                 <span class="text-xs font-medium text-white/80">Halo, <strong class="text-white">{{ user.username }}</strong></span>
@@ -47,7 +44,6 @@
             {% endif %}
         </div>
 
-        <!-- Mobile Menu Hamburger -->
         <div class="flex md:hidden items-center">
             <button type="button" id="mobile-menu-btn" class="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white">
                 <svg class="w-5 h-5" id="menu-icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +56,6 @@
         </div>
     </div>
 
-    <!-- Mobile Dropdown -->
     <div class="hidden md:hidden mt-3 rounded-2xl bg-black/80 backdrop-blur-2xl border border-white/15 p-4 space-y-2 text-sm text-white" id="mobile-menu">
         <a href="{% url 'main:show_main' %}" class="block px-3 py-2 rounded-xl bg-white/10 font-medium">Beranda</a>
         <a href="#marketplace" class="block px-3 py-2 rounded-xl hover:bg-white/5 text-white/80">Marketplace</a>
