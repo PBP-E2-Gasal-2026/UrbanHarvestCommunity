@@ -8,194 +8,153 @@
 
     <section class="relative min-h-[95vh] lg:min-h-screen flex flex-col justify-between pt-28 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8">
         
-        <div class="absolute inset-0 -z-10 overflow-hidden">
-            <img src="{% static 'images/hero-aerial-bg.png' %}" alt="Urban Agriculture Aerial Field" class="w-full h-full object-cover object-center scale-105 filter brightness-[0.72] contrast-[1.08]">
-            <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/25 to-[#080c09]"></div>
-            <div class="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#080c09] via-[#080c09]/90 to-transparent"></div>
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <img src="{% static 'images/hero-aerial-bg.jpg' %}" alt="Urban Agriculture Aerial Field" class="w-full h-full object-cover object-center filter brightness-[0.9] contrast-[1.05]">
+            <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#080c09]"></div>
+            <div class="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-[#080c09] to-transparent"></div>
         </div>
 
-        <div class="max-w-7xl mx-auto w-full flex-grow flex flex-col justify-between pt-6 lg:pt-12">
+        <div class="relative z-10 max-w-7xl mx-auto w-full flex-grow flex flex-col justify-between pt-6 lg:pt-12">
             
             <div class="max-w-3xl space-y-4">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 text-xs font-medium tracking-wide">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                    Menumbuhkan Esok Hari
-                </div>
-
                 <h1 class="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.08] drop-shadow-md">
                     Growing The<br>Future of Agriculture
                 </h1>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end pt-12 lg:pt-16">
-                
-                <div class="lg:col-span-5 sm:max-w-xs">
-                    <div class="rounded-2xl bg-black/55 backdrop-blur-xl border border-white/15 p-3.5 shadow-2xl shadow-black/80 hover:border-white/30 transition-all group">
-                        <div class="relative w-full h-44 rounded-xl overflow-hidden mb-3.5">
-                            <img src="{% static 'images/farmer-card.png' %}" alt="Petani dan Hasil Panen" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                        </div>
+            <div class="pt-16 lg:pt-24 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                <p class="text-sm sm:text-base text-white/80 max-w-xl leading-relaxed">
+                    Memberdayakan petani perkotaan dengan solusi pertanian berkelanjutan, kecerdasan buatan, dan marketplace berbasis data untuk meningkatkan produktivitas dan menjaga ketahanan pangan.
+                </p>
 
-                        <div class="px-1 space-y-2.5">
-                            <p class="text-xs sm:text-sm font-medium text-white/95 leading-snug">
-                                Memberdayakan petani lokal dengan hasil panen berkualitas
-                            </p>
-
-                            <div class="flex items-center justify-between pt-1 border-t border-white/10 text-xs text-white/70">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-amber-400 text-sm">★</span>
-                                    <span class="font-medium text-white/90">4.9 (Rating)</span>
-                                </div>
-                                <span class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white/80 group-hover:bg-white group-hover:text-black transition-all">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M7 17L17 7M17 7H7M17 7V17"/>
-                                    </svg>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-7 flex flex-col lg:items-end justify-end space-y-5 lg:text-right">
-                    <p class="text-sm sm:text-base text-white/80 max-w-md leading-relaxed">
-                        Memberdayakan petani perkotaan dengan solusi pertanian berkelanjutan, kecerdasan buatan, dan marketplace berbasis data untuk meningkatkan produktivitas dan menjaga ketahanan pangan.
-                    </p>
-
-                    <div>
-                        <a href="#marketplace" class="inline-flex items-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-semibold text-slate-950 bg-white hover:bg-slate-100 shadow-xl hover:shadow-2xl active:scale-95 transition-all">
-                            <span>Jelajahi Solusi Panen</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M7 17L17 7M17 7H7M17 7V17"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </section>
-
-    <section class="relative py-20 lg:py-28 px-4 sm:px-6 lg:px-8 bg-[#080c09]">
-        <div class="max-w-5xl mx-auto text-center">
-            <h2 class="text-2xl sm:text-4xl lg:text-5xl font-medium tracking-tight leading-[1.3] text-white">
-                Transforming agriculture through innovation <br class="hidden sm:inline">
-                and sustainable <span class="text-white/40 font-normal">practices to ensure food security and prosperity for future generations.</span>
-            </h2>
-        </div>
-    </section>
-
-    <section class="pb-28 px-4 sm:px-6 lg:px-8 bg-[#080c09]">
-        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-            
-            <div class="md:col-span-6 rounded-3xl bg-[#111713] border border-white/10 p-3 sm:p-4 shadow-2xl flex flex-col justify-between relative group overflow-hidden">
-                <div class="relative w-full h-80 sm:h-96 rounded-2xl overflow-hidden">
-                    <img src="{% static 'images/harvest-portrait.png' %}" alt="Petani di Kebun Komunitas" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute inset-0 bg-black/25"></div>
-
-                    <div class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90">
+                <div class="flex-shrink-0">
+                    <a href="#marketplace" class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-xs sm:text-sm font-semibold text-slate-950 bg-white hover:bg-slate-100 shadow-xl hover:shadow-2xl active:scale-95 transition-all">
+                        <span>Jelajahi Solusi Panen</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M7 17L17 7M17 7H7M17 7V17"/>
                         </svg>
-                    </div>
-
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <button type="button" aria-label="Putar Video Dokumentasi" class="w-14 h-14 rounded-full bg-white/90 hover:bg-white text-slate-900 flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all pl-1">
-                            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="pt-4 px-2 flex items-center justify-between text-xs text-white/70">
-                    <span class="font-medium text-white/90">Dokumentasi Panen Hidroponik Bersama</span>
-                    <span>Jakarta Pusat</span>
-                </div>
-            </div>
-
-            <div class="md:col-span-6 rounded-3xl bg-[#111713] border border-white/10 p-6 sm:p-8 shadow-2xl flex flex-col justify-between">
-                <div class="space-y-6">
-                    <div class="flex items-center gap-1.5 text-amber-400 text-base">
-                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                    </div>
-
-                    <blockquote class="text-sm sm:text-base lg:text-lg text-white/90 font-normal leading-relaxed">
-                        "Mitra yang benar-benar andal untuk transformasi pertanian perkotaan. Komunitas ini memahami sains di balik ketahanan pangan sekaligus sisi kemanusiaan dari para petani lokal."
-                    </blockquote>
-                </div>
-
-                <div class="pt-8 border-t border-white/10 flex items-center gap-3.5">
-                    <div class="w-11 h-11 rounded-full bg-emerald-800/80 border border-emerald-500/40 flex items-center justify-center text-white font-bold text-sm">
-                        EH
-                    </div>
-                    <div>
-                        <div class="text-sm font-semibold text-white">Esther Howard</div>
-                        <div class="text-xs text-white/50">Pegiat Urban Farming & Anggota Komunitas</div>
-                    </div>
+                    </a>
                 </div>
             </div>
 
         </div>
     </section>
 
-    <section id="marketplace" class="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-[#0b100c]">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/50 text-emerald-400 text-xs font-semibold">
-                    4 Pilar Utama
+    <section class="relative z-20 mx-auto max-w-[1440px] py-20 lg:py-36 px-4 sm:px-8 lg:px-12">
+        <div class="px-4 text-center">
+            <h2 class="mx-auto max-w-5xl text-3xl font-medium tracking-tight text-white lg:text-6xl lg:leading-tight">
+                Solusi Lengkap Urban Farming
+            </h2>
+            <p class="mx-auto my-5 max-w-3xl text-sm font-normal text-neutral-400 lg:text-lg">
+                Menghubungkan petani urban, warga perkotaan, komunitas kebun, dan pembeli melalui platform kolaboratif berbasis kecerdasan buatan.
+            </p>
+        </div>
+
+        <div class="mt-16 grid grid-cols-1 lg:grid-cols-6 border border-neutral-800 bg-neutral-950/70 overflow-hidden backdrop-blur-2xl">
+            <div class="col-span-1 lg:col-span-4 border-b lg:border-r border-neutral-800 p-8 sm:p-12 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-medium tracking-tight text-white">Marketplace & Hasil Panen Segar</h3>
+                    <p class="my-3 text-sm md:text-base text-neutral-400 max-w-xl">Eksplorasi sayuran hidroponik, buah organik, bibit, pupuk kompos, hingga perlengkapan tani langsung dari kebun urban sekitar Anda.</p>
                 </div>
-                <h3 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-                    Ekosistem Lengkap Urban Harvest
-                </h3>
-                <p class="text-sm sm:text-base text-white/60">
-                    Menghubungkan marketplace panen segar, forum diskusi, pemetaan kebun, serta pencarian berbasis kecerdasan buatan.
-                </p>
+                <div class="relative flex h-80 sm:h-[420px] w-full gap-10 px-2 py-8 overflow-hidden">
+                    <div class="group mx-auto h-full w-full bg-neutral-900 p-3 shadow-2xl border border-neutral-800/80">
+                        <img src="{% static 'images/harvest-portrait.png' %}" alt="Panen Hidroponik Komunitas" class="h-full w-full object-cover object-top">
+                    </div>
+                    <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-36 w-full bg-gradient-to-t from-neutral-950 via-neutral-950/80 to-transparent"></div>
+                    <div class="pointer-events-none absolute inset-x-0 top-0 z-10 h-36 w-full bg-gradient-to-b from-neutral-950/80 to-transparent"></div>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="rounded-2xl bg-white/[0.03] border border-white/10 p-6 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                    </div>
-                    <h4 class="text-base font-bold text-white mb-2">Marketplace Panen</h4>
-                    <p class="text-xs text-white/60 leading-relaxed">
-                        Katalog produk segar: sayuran hidroponik, buah, bibit tanaman, hingga pupuk kompos organik.
-                    </p>
+            <div class="col-span-1 lg:col-span-2 border-b border-neutral-800 p-8 sm:p-12 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-medium tracking-tight text-white">Forum & Berbagi Pengetahuan</h3>
+                    <p class="my-3 text-sm md:text-base text-neutral-400 max-w-sm">Ruang diskusi tanya jawab hama tanaman, tips nutrisi hidroponik, dan dokumentasi panen sesama pegiat tani kota.</p>
                 </div>
-
-                <div id="forum" class="rounded-2xl bg-white/[0.03] border border-white/10 p-6 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all">
-                    <div class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center mb-5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                <div class="relative flex h-80 sm:h-[420px] flex-col items-center justify-center overflow-hidden py-6">
+                    <div class="-ml-16 flex flex-row">
+                        <div class="mt-2 -mr-6 shrink-0 overflow-hidden border border-neutral-700 bg-neutral-800 p-1.5 shadow-lg transform -rotate-6 hover:rotate-0 hover:scale-105 transition-all duration-300">
+                            <img src="https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?q=80&w=600&auto=format&fit=crop" alt="Sayuran Segar" class="h-28 w-28 shrink-0 object-cover sm:h-36 sm:w-36">
+                        </div>
+                        <div class="mt-2 -mr-6 shrink-0 overflow-hidden border border-neutral-700 bg-neutral-800 p-1.5 shadow-lg transform rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300">
+                            <img src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?q=80&w=600&auto=format&fit=crop" alt="Bibit Tanaman" class="h-28 w-28 shrink-0 object-cover sm:h-36 sm:w-36">
+                        </div>
+                        <div class="mt-2 -mr-6 shrink-0 overflow-hidden border border-neutral-700 bg-neutral-800 p-1.5 shadow-lg transform -rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300">
+                            <img src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=600&auto=format&fit=crop" alt="Kebun Rooftop" class="h-28 w-28 shrink-0 object-cover sm:h-36 sm:w-36">
+                        </div>
                     </div>
-                    <h4 class="text-base font-bold text-white mb-2">Forum Komunitas</h4>
-                    <p class="text-xs text-white/60 leading-relaxed">
-                        Ruang diskusi interaktif untuk bertukar tips bercocok tanam dan jadwal panen bersama.
-                    </p>
-                </div>
-
-                <div id="map" class="rounded-2xl bg-white/[0.03] border border-white/10 p-6 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                    <div class="flex flex-row mt-4">
+                        <div class="mt-2 -mr-6 shrink-0 overflow-hidden border border-neutral-700 bg-neutral-800 p-1.5 shadow-lg transform rotate-6 hover:rotate-0 hover:scale-105 transition-all duration-300">
+                            <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=600&auto=format&fit=crop" alt="Hasil Panen" class="h-28 w-28 shrink-0 object-cover sm:h-36 sm:w-36">
+                        </div>
+                        <div class="mt-2 -mr-6 shrink-0 overflow-hidden border border-neutral-700 bg-neutral-800 p-1.5 shadow-lg transform -rotate-6 hover:rotate-0 hover:scale-105 transition-all duration-300">
+                            <img src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=600&auto=format&fit=crop" alt="Perawatan Tanaman" class="h-28 w-28 shrink-0 object-cover sm:h-36 sm:w-36">
+                        </div>
                     </div>
-                    <h4 class="text-base font-bold text-white mb-2">Peta Kebun Urban</h4>
-                    <p class="text-xs text-white/60 leading-relaxed">
-                        Cari kebun komunitas dan lokasi titik pickup hasil panen di sekitar wilayah Anda.
-                    </p>
-                </div>
-
-                <div id="llm-search" class="rounded-2xl bg-white/[0.03] border border-white/10 p-6 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    </div>
-                    <h4 class="text-base font-bold text-white mb-2">AI Natural Search</h4>
-                    <p class="text-xs text-white/60 leading-relaxed">
-                        Cari komoditas menggunakan bahasa sehari-hari yang diterjemahkan langsung oleh LLM OpenRouter.
-                    </p>
+                    <div class="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-neutral-950 to-transparent"></div>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-neutral-950 to-transparent"></div>
                 </div>
             </div>
+
+            <div class="col-span-1 lg:col-span-3 border-b lg:border-b-0 lg:border-r border-neutral-800 p-8 sm:p-12 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-medium tracking-tight text-white">Pencarian Komoditas Cerdas</h3>
+                    <p class="my-3 text-sm md:text-base text-neutral-400 max-w-sm">Temukan kebutuhan panen dan bibit tanaman dengan pencarian berbasis bahasa sehari-hari.</p>
+                </div>
+                <div class="relative mt-8 flex h-72 sm:h-80 w-full overflow-hidden border border-neutral-800 group">
+                    <img src="{% static 'images/farmer-card.png' %}" alt="Pencarian Komoditas" class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-5 left-5 right-5 flex items-center justify-between">
+                        <span class="text-xs text-white/70">Katalog Tervalidasi</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-1 lg:col-span-3 p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden">
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-medium tracking-tight text-white">Peta Kebun & Titik Pengambilan</h3>
+                    <p class="my-3 text-sm md:text-base text-neutral-400 max-w-sm">Temukan lokasi kebun komunitas, kebun petani mitra, serta titik pengambilan hasil panen terdekat dari lokasi Anda.</p>
+                </div>
+                <div class="relative mt-6 flex h-72 sm:h-80 w-full items-center justify-center overflow-hidden">
+                    <canvas id="cobe-globe" class="absolute -right-8 -bottom-52 sm:-bottom-44 w-[480px] h-[480px] max-w-none pointer-events-none select-none"></canvas>
+                </div>
+            </div>
+
         </div>
     </section>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+    import createGlobe from 'https://cdn.jsdelivr.net/npm/cobe@0.6.3/+esm';
+
+    const canvas = document.getElementById('cobe-globe');
+    if (canvas) {
+        let phi = 1.8;
+        const globe = createGlobe(canvas, {
+            devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+            width: 420 * 2,
+            height: 420 * 2,
+            phi: 1.8,
+            theta: -0.1,
+            dark: 1,
+            diffuse: 1.2,
+            mapSamples: 4000,
+            mapBrightness: 6,
+            baseColor: [0.2, 0.25, 0.2],
+            markerColor: [0.2, 0.9, 0.5],
+            glowColor: [0.1, 0.3, 0.2],
+            markers: [
+                { location: [-6.2088, 106.8456], size: 0.08 },
+                { location: [-6.4025, 106.7942], size: 0.06 },
+                { location: [-6.9175, 107.6191], size: 0.05 },
+            ],
+            onRender: (state) => {
+                state.phi = phi;
+                phi += 0.008;
+            },
+        });
+    }
+</script>
 {% endblock %}

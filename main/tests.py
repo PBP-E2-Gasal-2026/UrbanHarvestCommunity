@@ -24,7 +24,6 @@ class LandingPageTestCase(TestCase):
         self.assertContains(response, 'Growing The')
         self.assertContains(response, 'Future of Agriculture')
         self.assertContains(response, 'Marketplace')
-        self.assertContains(response, 'Forum Komunitas')
         self.assertContains(response, 'Peta Kebun')
-        self.assertContains(response, 'AI')
+        self.assertContains(response, 'AI Search')
 
