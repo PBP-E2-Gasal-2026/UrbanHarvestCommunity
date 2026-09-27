@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Daftar | Urban Harvest Community{% endblock %}
+
+{% block content %}
+<section class="register-page flex flex-col justify-center items-center mx-auto min-h-screen px-4 pt-40 pb-16">
+  <h1 class="mb-6 text-3xl font-bold">Daftar</h1>
+  <form method="post" class="register-form space-y-4">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="register-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<p class="text-rose-300" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="w-full rounded-lg bg-emerald-600 px-4 py-2 mt-[16px]">Daftar</button>
+  </form>
+  <p class="mt-4">Sudah punya akun? <a class="auth-link" href="{% url 'authentication:login' %}">Masuk</a></p>
+</section>
+{% endblock %}

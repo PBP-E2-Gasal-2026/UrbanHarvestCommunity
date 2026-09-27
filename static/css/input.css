@@ -1,3 +1,59 @@
 @import "tailwindcss";
 
 @source "../../templates";
+
+@layer components {
+  .register-form,
+  .login-form {
+    width: 100%;
+    max-width: 34rem;
+  }
+
+  .register-field label,
+  .login-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #d1fae5;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .register-field input,
+  .login-field input {
+    display: block;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid rgb(255 255 255 / 0.25);
+    border-radius: 0.5rem;
+    background: rgb(255 255 255 / 0.08);
+    color: white;
+  }
+
+  .register-field input:focus-visible,
+  .login-field input:focus-visible {
+    outline: 2px solid #34d399;
+    outline-offset: 2px;
+  }
+
+  .auth-link {
+    color: #6ee7b7;
+    font-weight: 600;
+  }
+
+  .auth-link:hover {
+    color: #a7f3d0;
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .register-page {
+      padding-top: 7rem;
+    }
+
+    .register-form,
+    .login-form {
+      max-width: 100%;
+    }
+  }
+}

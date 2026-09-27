@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Masuk | Urban Harvest Community{% endblock %}
+
+{% block content %}
+<section class="flex flex-col justify-center items-center mx-auto min-h-screen px-4 pt-40 pb-16">
+  <h1 class="mb-6 text-3xl font-bold">Masuk</h1>
+  <form method="post" class="login-form space-y-4">
+    {% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="text-rose-300" role="alert">{{ error }}</p>{% endfor %}
+    {% for field in form %}
+      <div class="login-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<p class="text-rose-300" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="w-full rounded-lg bg-emerald-600 px-4 py-2 mt-[16px]">Masuk</button>
+  </form>
+  <p class="mt-4">Belum punya akun? <a class="auth-link" href="{% url 'authentication:register' %}">Daftar</a></p>
+</section>
+{% endblock %}
