@@ -21,8 +21,10 @@ class LandingPageTestCase(TestCase):
     def test_landing_page_contains_key_elements(self):
         response = self.client.get('/')
         self.assertContains(response, 'Urban Harvest')
-        self.assertContains(response, 'Marketplace Hasil Panen')
+        self.assertContains(response, 'Growing The')
+        self.assertContains(response, 'Future of Agriculture')
+        self.assertContains(response, 'Marketplace')
         self.assertContains(response, 'Forum Komunitas')
-        self.assertContains(response, 'Peta Kebun & Lokasi', html=False)
-        self.assertContains(response, 'Pencarian LLM')
+        self.assertContains(response, 'Peta Kebun')
+        self.assertContains(response, 'AI')
 

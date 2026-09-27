@@ -1,99 +1,78 @@
-<header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-emerald-100 transition-all">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            <!-- Brand / Logo -->
-            <div class="flex items-center space-x-3">
-                <a href="{% url 'main:show_main' %}" class="flex items-center gap-2 group">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                    </div>
-                    <div>
-                        <span class="text-lg font-bold text-slate-900 tracking-tight block leading-tight">Urban Harvest</span>
-                        <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider block">Community</span>
-                    </div>
+<header class="absolute top-0 left-0 right-0 z-50 pt-5 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <!-- Logo / Brand -->
+        <a href="{% url 'main:show_main' %}" class="flex items-center gap-2.5 text-white group">
+            <div class="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-emerald-400 group-hover:bg-white/20 transition-all">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L8 6h8l-4-4zM12 7L6 13h12l-6-6zM12 14l-8 7h16l-8-7z"/>
+                </svg>
+            </div>
+            <span class="text-lg font-bold tracking-tight text-white drop-shadow-sm">Urban Harvest</span>
+        </a>
+
+        <!-- Center Floating Pill Nav (Desktop) -->
+        <nav class="hidden md:flex items-center gap-1 bg-black/40 backdrop-blur-xl border border-white/15 px-2 py-1.5 rounded-full shadow-2xl">
+            <a href="{% url 'main:show_main' %}" class="px-4 py-1.5 rounded-full text-xs font-semibold text-slate-900 bg-white shadow-sm transition-all">
+                Beranda
+            </a>
+            <a href="#marketplace" class="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
+                Marketplace
+            </a>
+            <a href="#forum" class="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
+                Komunitas
+            </a>
+            <a href="#map" class="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
+                Peta Kebun
+            </a>
+            <a href="#llm-search" class="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5">
+                <span>AI Search</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            </a>
+        </nav>
+
+        <!-- Right CTA Button -->
+        <div class="hidden md:flex items-center gap-3">
+            {% if user.is_authenticated %}
+                <span class="text-xs font-medium text-white/80">Halo, <strong class="text-white">{{ user.username }}</strong></span>
+                <a href="{% url 'admin:logout' %}" class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all">
+                    Keluar
                 </a>
-            </div>
-
-            <!-- Desktop Nav Links -->
-            <nav class="hidden md:flex items-center space-x-1 lg:space-x-2">
-                <a href="#marketplace" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-emerald-600 rounded-lg hover:bg-emerald-50/60 transition-colors">Marketplace</a>
-                <a href="#forum" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-emerald-600 rounded-lg hover:bg-emerald-50/60 transition-colors">Forum Komunitas</a>
-                <a href="#map" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-emerald-600 rounded-lg hover:bg-emerald-50/60 transition-colors">Peta Kebun</a>
-                <a href="#llm-search" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-emerald-600 rounded-lg hover:bg-emerald-50/60 transition-colors flex items-center gap-1.5">
-                    <span>AI Search</span>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Baru</span>
+            {% else %}
+                <a href="#register" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-900 bg-white hover:bg-slate-100 rounded-full shadow-lg hover:shadow-xl active:scale-95 transition-all">
+                    <span>Gabung Komunitas</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/>
+                    </svg>
                 </a>
-            </nav>
+            {% endif %}
+        </div>
 
-            <!-- User Auth CTA (Guest vs Logged-in) -->
-            <div class="hidden md:flex items-center space-x-3">
-                {% if user.is_authenticated %}
-                    <div class="flex items-center space-x-3">
-                        <span class="text-sm font-medium text-slate-700">Halo, <span class="font-semibold text-emerald-700">{{ user.username }}</span></span>
-                        <a href="{% url 'admin:logout' %}" class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-rose-600 rounded-lg border border-slate-200 hover:border-rose-200 hover:bg-rose-50/50 transition-colors">
-                            Keluar
-                        </a>
-                    </div>
-                {% else %}
-                    <a href="#login" class="px-4 py-2 text-sm font-medium text-slate-700 hover:text-emerald-700 rounded-lg hover:bg-slate-100 transition-colors">
-                        Masuk
-                    </a>
-                    <a href="#register" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-600/30 hover:shadow-md hover:shadow-emerald-600/40 active:scale-95 transition-all">
-                        Daftar Akun
-                    </a>
-                {% endif %}
-            </div>
-
-            <!-- Mobile Hamburger Button -->
-            <div class="flex md:hidden items-center">
-                <button type="button" id="mobile-menu-btn" aria-label="Buka Menu" class="p-2 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <svg class="w-6 h-6" id="menu-icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                    <svg class="w-6 h-6 hidden" id="menu-icon-close" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+        <!-- Mobile Menu Hamburger -->
+        <div class="flex md:hidden items-center">
+            <button type="button" id="mobile-menu-btn" class="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white">
+                <svg class="w-5 h-5" id="menu-icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg class="w-5 h-5 hidden" id="menu-icon-close" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     </div>
 
-    <!-- Mobile Menu Dropdown -->
-    <div class="hidden md:hidden border-t border-slate-100 bg-white px-4 pt-3 pb-5 space-y-2 shadow-xl" id="mobile-menu">
-        <a href="#marketplace" class="block px-3 py-2.5 rounded-lg text-base font-medium text-slate-700 hover:text-emerald-700 hover:bg-emerald-50">Marketplace</a>
-        <a href="#forum" class="block px-3 py-2.5 rounded-lg text-base font-medium text-slate-700 hover:text-emerald-700 hover:bg-emerald-50">Forum Komunitas</a>
-        <a href="#map" class="block px-3 py-2.5 rounded-lg text-base font-medium text-slate-700 hover:text-emerald-700 hover:bg-emerald-50">Peta Kebun</a>
-        <a href="#llm-search" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-base font-medium text-slate-700 hover:text-emerald-700 hover:bg-emerald-50">
-            <span>AI Search</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Baru</span>
-        </a>
-        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+    <!-- Mobile Dropdown -->
+    <div class="hidden md:hidden mt-3 rounded-2xl bg-black/80 backdrop-blur-2xl border border-white/15 p-4 space-y-2 text-sm text-white" id="mobile-menu">
+        <a href="{% url 'main:show_main' %}" class="block px-3 py-2 rounded-xl bg-white/10 font-medium">Beranda</a>
+        <a href="#marketplace" class="block px-3 py-2 rounded-xl hover:bg-white/5 text-white/80">Marketplace</a>
+        <a href="#forum" class="block px-3 py-2 rounded-xl hover:bg-white/5 text-white/80">Komunitas</a>
+        <a href="#map" class="block px-3 py-2 rounded-xl hover:bg-white/5 text-white/80">Peta Kebun</a>
+        <a href="#llm-search" class="block px-3 py-2 rounded-xl hover:bg-white/5 text-white/80">AI Search</a>
+        <div class="pt-3 border-t border-white/10">
             {% if user.is_authenticated %}
-                <span class="px-3 py-1 text-sm text-slate-600">Masuk sebagai: <strong>{{ user.username }}</strong></span>
-                <a href="{% url 'admin:logout' %}" class="w-full text-center px-4 py-2 text-sm font-medium text-rose-600 bg-rose-50 rounded-lg hover:bg-rose-100">Keluar</a>
+                <a href="{% url 'admin:logout' %}" class="block w-full text-center px-4 py-2 text-xs font-semibold rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">Keluar</a>
             {% else %}
-                <a href="#login" class="w-full text-center px-4 py-2.5 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50">Masuk</a>
-                <a href="#register" class="w-full text-center px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-sm">Daftar Akun</a>
+                <a href="#register" class="block w-full text-center px-4 py-2.5 text-xs font-semibold rounded-full bg-white text-slate-900">Gabung Komunitas ↗</a>
             {% endif %}
         </div>
     </div>
 </header>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const menuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const iconOpen = document.getElementById('menu-icon-open');
-        const iconClose = document.getElementById('menu-icon-close');
-
-        if (menuBtn && mobileMenu) {
-            menuBtn.addEventListener('click', function () {
-                const isHidden = mobileMenu.classList.toggle('hidden');
-                iconOpen.classList.toggle('hidden', !isHidden);
-                iconClose.classList.toggle('hidden', isHidden);
-            });
-        }
-    });
-</script>
