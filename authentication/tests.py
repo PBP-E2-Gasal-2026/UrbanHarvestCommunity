@@ -2,6 +2,7 @@ from django.contrib.sessions.models import Session as DjangoSession
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from .forms import LoginForm
 from .models import Role, Session, User
 
 
@@ -29,6 +30,26 @@ class UserLoginTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Session.objects.filter(user=self.user).exists())
         self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_login_form_validates_credentials_and_exposes_user(self):
+        form = LoginForm(data={'username': 'sari', 'password': 'secret-123'})
+
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.get_user(), self.user)
+
+    def test_login_form_rejects_missing_password(self):
+        form = LoginForm(data={'username': 'sari'})
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('password', form.errors)
+
+    def test_login_form_rejects_other_role(self):
+        self.user.roles.clear()
+        self.user.roles.add(Role.objects.create(name='farmer', description='Petani'))
+        form = LoginForm(data={'username': 'sari', 'password': 'secret-123'})
+
+        self.assertFalse(form.is_valid())
+        self.assertIsNone(form.get_user())
 
     def test_non_user_role_cannot_log_in(self):
         self.user.roles.clear()
