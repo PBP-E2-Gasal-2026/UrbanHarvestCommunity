@@ -2,6 +2,9 @@ from django.shortcuts import render
 
 
 def show_main(request):
-    return render(request, 'index.html')
+    context = {
+        'app_name': 'Urban Harvest Community',
+    }
+    return render(request, 'landing.html', context)
 
 # Create your views here.
