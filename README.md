@@ -1,5 +1,49 @@
 # Urban Harvest Community
 
+## Tautan
+
+* **Deployment PWS:** https://adrian-nathanael-midterm-project.pws.cs.ui.ac.id
+* **Desain Figma:** https://www.figma.com/design/uW8pusibGXhxVVTBWcD7JE/Untitled
+
+## Design System
+
+Design system disepakati di Figma (page **Foundations** dan **Components**) dan diimplementasikan di `static/css/input.css` lewat blok `@theme` Tailwind CSS v4. Nama token di kode **sama persis** dengan nama Figma Variables, misalnya variable `brand` di Figma menjadi `--color-brand` di CSS dan class `bg-brand` / `text-brand` di template.
+
+**Aturan pakai**
+
+* Jangan menulis warna hex langsung di template (mis. `bg-[#080c09]`). Pakai token (`bg-canvas`) atau tambahkan token baru di `@theme` dan di Figma.
+* Tipografi: `font-display` (Playfair Display) untuk judul besar, `font-sans` (Plus Jakarta Sans, default) untuk teks dan UI.
+* Satu tombol `btn-primary` per area; sisanya `btn-secondary` atau `btn-ghost`.
+
+**Token utama**
+
+| Token | Nilai | Dipakai untuk |
+| --- | --- | --- |
+| `canvas` | `#080C09` | Latar halaman |
+| `surface` / `surface-2` | `#0A0A0A` / `#171717` | Kartu, panel / hover, disabled |
+| `line` | `#262626` | Border kartu, divider |
+| `brand` / `brand-hover` | `#059669` / `#10B981` | Aksi utama hijau |
+| `brand-soft` | `#6EE7B7` | Link, harga, status sukses |
+| `body` / `muted` | `#D4D4D4` / `#A3A3A3` | Paragraf / keterangan |
+| `glass` / `glass-border` | putih 8% / 25% | Latar dan border input, tombol secondary |
+| `focus` | `#34D399` | Garis fokus |
+| `danger` / `warning` | `#FDA4AF` / `#FCD34D` | Error / peringatan, titik ambil |
+
+Radius: `rounded-lg` (input, 8px), `rounded-2xl` (kartu, 16px), `rounded-pill` (tombol, badge, chip). Spasi mengikuti skala bawaan Tailwind (kelipatan 4px).
+
+**Komponen**
+
+| Komponen Figma | Class | Contoh |
+| --- | --- | --- |
+| Button | `.btn` + `.btn-primary` \| `.btn-brand` \| `.btn-secondary` \| `.btn-danger` \| `.btn-ghost` (opsional `.btn-sm`) | `<button class="btn btn-primary">Simpan</button>` |
+| Input | `.field` (membungkus label + input bawaan Django), `.input`, `.field-error`, `.field-help` | `<div class="field"><label>…</label>{{ form.email }}</div>` |
+| Badge | `.badge` + `.badge-brand` \| `.badge-warning` \| `.badge-danger` \| `.badge-neutral` | `<span class="badge badge-warning">Titik ambil</span>` |
+| Chip | `.chip` (+ `.chip-active` atau `aria-pressed="true"`) | `<button class="chip chip-active">Semua</button>` |
+| Card | `.card` (+ `.card-selected`) | `<article class="card">…</article>` |
+| Link | `.link` | `<a class="link" href="…">Daftar</a>` |
+
+Contoh pemakaian lengkap ada di `templates/login.html` dan `templates/register.html`.
+
 ## Menjalankan halaman awal
 
 Proyek memakai Django dengan app `main`, template global di `templates/`, dan aset CSS di `static/css/`, mengikuti pola repo [myportofolio](https://github.com/Adriannathan89/myportofolio). Tailwind CSS v4 dibangun dari `static/css/input.css` ke `static/css/style.css`.
@@ -13,7 +57,7 @@ npm run build:css
 python manage.py runserver
 ```
 
-Buka `http://127.0.0.1:8000/` untuk melihat halaman **Hello world!**. Selama mengubah kelas Tailwind di template, jalankan `npm run watch:css` di terminal lain agar CSS dibangun ulang otomatis.
+Buka `http://127.0.0.1:8000/` untuk melihat landing page. Selama mengubah kelas Tailwind di template, jalankan `npm run watch:css` di terminal lain agar CSS dibangun ulang otomatis.
 
 ## Checkpoint 1
 
