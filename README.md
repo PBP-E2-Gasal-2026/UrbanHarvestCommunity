@@ -832,6 +832,43 @@ Tanggung jawab utama:
 * Integrasi marketplace dengan merchant.
 * Menyediakan endpoint/data yang dibutuhkan modul LLM Search.
 
+### Rencana Pengembangan Modul:
+
+1. **Perancangan Model & Skema Data**
+   * Membuat model `Category` (nama, slug, ikon/deskripsi).
+   * Membuat model `Product` yang berelasi dengan `Merchant` (dari Modul Autentikasi/Vania), `Category`, dengan atribut: nama produk, deskripsi, foto produk, harga (Rupiah), stok, status aktif, lokasi/titik pengambilan (terhubung dengan Modul Peta/Wisnu), serta timestamp `created_at` dan `updated_at`.
+   * Menyiapkan validasi data (harga ≥ 0, stok ≥ 0, penanganan status produk otomatis bertanda "Habis" jika stok = 0).
+
+2. **Pengembangan Antarmuka Pengguna (Katalog, Kartu, & Detail)**
+   * Membuat halaman utama katalog (`catalog.html`) yang responsif menggunakan Tailwind CSS v4 dengan pagination.
+   * Merancang komponen `Product Card` informatif (foto, judul, harga terformat Rupiah, badge kategori, ketersediaan stok, nama merchant, dan lokasi).
+   * Membangun halaman detail produk (`product_detail.html`) yang memuat deskripsi lengkap, stok terkini, profil/etalase merchant, dan tautan titik lokasi pengambilan pada peta.
+   * Memastikan hak akses read-only publik agar pengunjung (Guest) dapat mengeksplorasi katalog tanpa wajib login sesuai PRD.
+
+3. **Sistem Pencarian, Filter, & Sorting**
+   * Mengembangkan fitur pencarian produk berbasis keyword pada nama dan deskripsi produk.
+   * Mengimplementasikan kombinasi filter:
+     * Kategori produk (sayuran, buah, bibit, pupuk kompos, media tanam, dsb.).
+     * Rentang harga (harga minimum dan harga maksimum).
+     * Lokasi kebun/merchant.
+     * Ketersediaan stok (produk tersedia vs habis).
+   * Menambahkan pengurutan (sorting) berdasarkan produk terbaru serta harga termurah dan termahal.
+   * Menangani validasi input filter secara aman tanpa memicu galat server jika parameter tidak valid.
+
+4. **Integrasi Internal Antarmodul & Layanan Data**
+   * **Integrasi dengan Modul Autentikasi & Pengguna (Vania):**
+     * Memastikan hanya pengguna dengan peran `Petani - Penjual` yang disetujui yang dapat mengakses formulir manajemen produk (tambah, edit, hapus, kelola stok produk merchant miliknya).
+     * Menampilkan informasi etalase merchant pada halaman detail produk.
+   * **Penyediaan Layanan & Endpoint untuk Modul LLM Search (Adrian):**
+     * Menyediakan fungsi/service query terstruktur dan endpoint JSON internal (`/marketplace/api/search/` atau fungsi katalog bersama) yang menerima parameter filter tervalidasi (`keyword`, `category`, `min_price`, `max_price`, `location`, `in_stock`).
+     * Memastikan data yang dihasilkan selalu berasal dari database katalog aktif (grounded search) agar kartu hasil pencarian LLM menggunakan komponen UI yang konsisten dengan katalog reguler.
+   * **Integrasi dengan Modul Peta Kebun (Wisnu):**
+     * Menyediakan relasi identitas lokasi pada setiap produk/merchant agar titik pengambilan atau kebun penjual dapat langsung dibuka pada modul peta.
+
+5. **Pengujian & Pembersihan**
+   * Menulis unit tests (`TestCase`) untuk validasi model produk, kueri pencarian, filter kombinasi, logika penanda stok habis, dan kontrol akses penjual.
+   * Memastikan tampilan katalog dan komponen pendukung bebas dari error serta mengikuti kaidah penulisan kode proyek yang rapi dan konsisten.
+
 ---
 
 ## 4. Vania Apsari Nailah Putri Difa — 2506615103
