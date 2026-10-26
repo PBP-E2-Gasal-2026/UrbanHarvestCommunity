@@ -20,3 +20,11 @@ RED: missing filters/marketplace implementation, test loader reported expected M
 GREEN: 7 contract/validation tests; full suite 26/26 passed.
 REFACTOR: formatted focused modules/tests; full suite 26/26 passed.
 Queries captured: SELECT only, product/category projection, LIMIT 20, no auth/seller columns.
+
+### Task 2
+RED: missing OpenRouter/service implementation (9b86b59).
+GREEN: 9 tests passed; full suite 35/35 passed.
+REFACTOR: formatting; full suite 35/35 passed.
+OpenRouter tested at HTTP boundary with complete response envelopes, not a live paid call.
+Ruling: explanation uses validated reason codes and server-rendered facts, rather than arbitrary model prose — prevents unsupported product claims — less expressive explanations.
+Ruling: extraction includes unsupported_conditions explicitly — represents the approved clarification behavior — semantic completeness still depends on model interpretation and requires live evaluation later.
