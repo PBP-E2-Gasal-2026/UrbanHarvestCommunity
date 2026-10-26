@@ -1,3 +1,4 @@
+from dataclasses import replace
 from unittest.mock import Mock
 
 from django.test import SimpleTestCase
@@ -44,6 +45,40 @@ class ServiceTests(SimpleTestCase):
         self.assertIn("25.000", result["explanation"])
         self.assertNotIn("password", result["explanation"])
         self.assertFalse(result["degraded"])
+
+    def test_price_order_survives_model_reordering_in_either_direction(self):
+        cheap = replace(self.product, id=2, name="Kangkung", price=8000)
+        for sort, candidates in (
+            ("price_asc", [cheap, self.product]),
+            ("price_desc", [self.product, cheap]),
+        ):
+            with self.subTest(sort=sort):
+                self.client.extract.return_value["filters"] = {
+                    "categories": ["sayuran"],
+                    "sort": sort,
+                }
+                self.repo.search.return_value = candidates
+                self.client.suggest.return_value = {
+                    "suggestions": [
+                        {"id": card.id, "reasons": []} for card in reversed(candidates)
+                    ]
+                }
+                result = self.service.run("rekomendasikan sayuran berdasarkan harga")
+                self.assertEqual(
+                    [p["id"] for p in result["products"]], [c.id for c in candidates]
+                )
+
+    def test_model_cannot_drop_cheapest_candidate_for_price_search(self):
+        cheap = replace(self.product, id=2, name="Kangkung", price=8000)
+        self.client.extract.return_value["filters"] = {
+            "categories": ["sayuran"],
+            "sort": "price_asc",
+        }
+        self.repo.search.return_value = [cheap, self.product]
+        self.client.suggest.return_value = {"suggestions": [{"id": 1, "reasons": []}]}
+        result = self.service.run("rekomendasikan sayuran dengan harga termurah")
+        self.assertEqual([p["id"] for p in result["products"]], [2, 1])
+        self.assertIn("termurah", result["explanation"])
 
     def test_empty_results_request_clarification(self):
         self.repo.search.return_value = []

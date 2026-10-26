@@ -5,6 +5,25 @@ from llm_searching.filters import parse_filters, validate_prompt
 
 
 class FiltersTests(SimpleTestCase):
+    def test_complete_neutral_model_response_accepts_product_only_search(self):
+        filters = parse_filters(
+            {
+                "keyword": "tomat",
+                "categories": [],
+                "min_price": None,
+                "max_price": None,
+                "location": "",
+                "in_stock": False,
+                "sort": "newest",
+                "limit": 20,
+            }
+        )
+        self.assertEqual(filters.keyword, "tomat")
+        self.assertIsNone(filters.min_price)
+        self.assertIsNone(filters.max_price)
+        self.assertEqual(filters.categories, ())
+        self.assertFalse(filters.in_stock)
+
     def test_prompt_bounds_and_controls(self):
         self.assertEqual(validate_prompt("  cari tomat  "), "cari tomat")
         for value in (None, [], " ", "x" * 2001, "tomat\x00"):

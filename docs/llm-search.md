@@ -89,6 +89,21 @@ jaminan high availability untuk keseluruhan aplikasi.
 
 ## Kontrak pencarian
 
+Nama produk saja cukup: `carikan saya tomat`. Permintaan rekomendasi juga dapat
+memakai kategori, misalnya `rekomendasikan sayuran kepada saya dengan harga
+termurah`: kategori menjadi `sayuran`, keyword tetap kosong, dan sorting memakai
+`price_asc`. Kata "murah" tidak menambahkan batas anggaran yang tidak diminta.
+
+Ekstraksi menoleransi typo ringan dan bahasa santai yang maksudnya jelas, termasuk
+nama produk, kategori, dan kota. Angka serta batas harga eksplisit tetap dipertahankan.
+Jika tafsir tidak jelas, sistem meminta klarifikasi. Koreksi ini dilakukan pada
+interpretasi prompt; tidak mengambil seluruh katalog atau menjalankan SQL model.
+
+Untuk sorting harga eksplisit, daftar hasil tetap mengikuti query database. Tahap
+suggestion hanya menambahkan alasan yang tervalidasi dan tidak dapat menghilangkan
+kandidat termurah atau membalik urutannya. Harga adalah harga tercantum per satuan
+produk; setiap kartu tetap menampilkan satuan aslinya.
+
 Filter yang didukung: `keyword`, `categories` (list slug), `min_price`, `max_price`,
 `location`, `in_stock`, `sort` (`newest`, `price_asc`, `price_desc`), `limit`.
 Harga adalah Rupiah per satuan produk. Produk arsip selalu dikecualikan. Stok nol
@@ -180,6 +195,16 @@ sesuai PDF, tidak model marketplace produksi. Tes OpenRouter memakai HTTP transp
 fake; tes worker memodelkan gangguan/recovery dengan transport double. Tes race
 PostgreSQL hanya dijalankan pada backend PostgreSQL dan diskip pada SQLite.
 Lihat execution log untuk bukti pengujian aktual dan keterbatasannya.
+
+Jalankan regresi prompt pada model asli secara eksplisit dengan API key yang
+terkonfigurasi (menggunakan kuota OpenRouter):
+
+```bash
+LLM_RUN_LIVE_TESTS=1 python manage.py test llm_searching.tests.test_live_prompts
+```
+
+Restart proses `run_llm_worker` yang sedang berjalan setelah mengubah instruksi
+ekstraksi agar worker memuat versi baru.
 
 Desain: `docs/superpowers/specs/2026-10-26-llm-search-design.md`.
 Plan: `docs/superpowers/plans/2026-10-26-llm-search.md`.

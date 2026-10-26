@@ -60,7 +60,20 @@ class SearchService:
         except (InvalidSearch, ProviderUnavailable):
             selected = [(card, []) for card in candidates]
             degraded = True
+        if filters.sort in ("price_asc", "price_desc"):
+            # Price ordering comes from the database. Model ranking must neither
+            # reorder it nor hide the cheapest/most expensive matching candidate.
+            reasons_by_id = {card.id: reasons for card, reasons in selected}
+            selected = [(card, reasons_by_id.get(card.id, [])) for card in candidates]
         explanations = []
+        if filters.sort == "price_asc":
+            explanations.append(
+                "Produk sesuai pencarian, diurutkan berdasarkan harga tercantum dari yang termurah."
+            )
+        elif filters.sort == "price_desc":
+            explanations.append(
+                "Produk sesuai pencarian, diurutkan berdasarkan harga tercantum dari yang tertinggi."
+            )
         for card, reasons in selected:
             price = f"{card.price:,}".replace(",", ".")
             sentence = f"{card.name}: Rp{price}/{card.unit}, lokasi {card.location}, stok {card.stock}."

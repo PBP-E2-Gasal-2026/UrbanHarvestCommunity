@@ -145,5 +145,51 @@ The actual worker management command was also exercised with `--once` and no bro
 
 All original worktree commit IDs remain ancestors of the current feature branch.
 
+## Follow-up recovery and search robustness
+
+The requested earlier prompt changes were found in stash object
+`bb8297df37760c942ccb737660e39a3a1fa9b5a6` (also present in the older stash
+`981927e686caf17bce5151bd9e4b2e210b67da0b`). Recovery copied only the extraction
+implementation and its related tests; no stash was popped or deleted. The saved
+marketplace-aware test fixture was recovered from
+`520611852140371a54d64eb9655a7654ce3f1dc9` to keep post-rebase tests compatible.
+
+Before the fix, all three new live regression cases returned needs_clarification:
+cheapest vegetables, a misspelled tomato/location with an explicit budget, and a
+misspelled category. Service regressions also failed because model ranking could
+reverse explicit price ordering or exclude the cheapest candidate.
+
+The restored instructions now recognize category-only recommendations, convert
+cheapest/most-expensive wording into supported sorting, and normalize obvious
+typos without inventing a budget or changing explicit numeric constraints. Absent
+preferences retain neutral values. Ambiguous and unsupported constraints still
+require clarification. The price-sorted database candidates now remain authoritative
+for both order and membership through the suggestion stage.
+
+Focused offline verification: 19 tests passed. Six live Gemma cases passed,
+covering the original simple search, price/location preservation, unsupported
+quantity budgets, cheapest recommendations, and product/category/location typos.
+Additional unseen-typo and actual seeded-database pipeline checks are recorded in
+the follow-up verification result. No API keys or raw provider responses were logged.
+
+Follow-up verification result:
+
+- Full suite: 185 tests, 176 passed and 9 skipped (7 opt-in live checks and 2
+  PostgreSQL-only checks); no failures.
+- Live extraction: 7/7 passed, including the unseen typo `sayruan paling murha`.
+- Actual seeded-database pipeline: cheapest vegetables began with Kangkung
+  Hidroponik at Rp8.000, followed by prices 9.000, 12.000, 25.000 in order.
+- Actual typo pipeline: `tomta di dpok maksimal 30 ribu` became keyword `tomat`,
+  location `Depok`, max_price 30000 and returned Tomat Cherry Organik.
+- The recommendation suggestion stage fell back safely; a separate diagnostic
+  confirmed the provider exceeded the existing 35-second deadline. Database
+  results and deterministic explanations remained available and correctly sorted.
+  The tomato typo pipeline completed without degradation. Provider latency is
+  not claimed fixed by these prompt changes; deadlines and safety checks remain.
+- Ruff, formatting, Django checks, migration dry run and whitespace checks passed.
+- All three original stash objects remain unchanged. The user subsequently
+  requested a refactor commit for this follow-up; the active worker needs a restart
+  to load the updated prompt.
+
 Temporary RabbitMQ container removed after verifying its ownership label; isolated
 PostgreSQL cluster stopped. Existing host services were left running unchanged.
