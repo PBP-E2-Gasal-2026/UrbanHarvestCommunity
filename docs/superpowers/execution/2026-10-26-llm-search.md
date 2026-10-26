@@ -28,3 +28,11 @@ REFACTOR: formatting; full suite 35/35 passed.
 OpenRouter tested at HTTP boundary with complete response envelopes, not a live paid call.
 Ruling: explanation uses validated reason codes and server-rendered facts, rather than arbitrary model prose — prevents unsupported product claims — less expressive explanations.
 Ruling: extraction includes unsupported_conditions explicitly — represents the approved clarification behavior — semantic completeness still depends on model interpretation and requires live evaluation later.
+
+### Task 3
+RED: SearchJob absent (a2c45c8).
+GREEN: 5 lifecycle tests passed; full suite 40/40 passed; no missing migrations.
+REFACTOR: formatting; full suite 40/40 passed.
+Lease minimum 180 seconds covers two bounded provider calls; finalization is fenced by token and expiry.
+Quota locks the owner only during admission; marketplace adapter remains account-table-free.
+PostgreSQL race behavior has not been verified against a live PostgreSQL server.
