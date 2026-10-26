@@ -2,8 +2,11 @@ import json
 import uuid
 from types import SimpleNamespace
 from unittest.mock import Mock
+
 from django.test import SimpleTestCase
-from llm_searching.transport import RabbitTransport, BrokerUnavailable
+
+from llm_searching.transport import BrokerUnavailable, RabbitTransport
+
 
 class TransportTests(SimpleTestCase):
     def make_transport(self):
@@ -11,7 +14,10 @@ class TransportTests(SimpleTestCase):
         channel.basic_get.return_value = (None, None, None)
         connection = Mock()
         connection.channel.return_value = channel
-        transport = RabbitTransport("amqp://guest:guest@localhost:5672/%2F", connection_factory=lambda p: connection)
+        transport = RabbitTransport(
+            "amqp://guest:guest@localhost:5672/%2F",
+            connection_factory=lambda p: connection,
+        )
         transport.connect()
         return transport, channel
 
@@ -29,7 +35,11 @@ class TransportTests(SimpleTestCase):
 
     def test_poison_message_dropped_without_database_access(self):
         transport, channel = self.make_transport()
-        channel.basic_get.return_value = (SimpleNamespace(delivery_tag=42), None, b'{"sql":"DELETE"}')
+        channel.basic_get.return_value = (
+            SimpleNamespace(delivery_tag=42),
+            None,
+            b'{"sql":"DELETE"}',
+        )
         self.assertIsNone(transport.receive())
         channel.basic_ack.assert_called_once_with(delivery_tag=42)
         transport.close()

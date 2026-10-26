@@ -1,8 +1,9 @@
 """One coordinator per deployment; RabbitMQ is optional for progress."""
-from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import close_old_connections
@@ -15,12 +16,24 @@ from .transport import BrokerUnavailable, RabbitTransport
 
 logger = logging.getLogger(__name__)
 
+
 class WorkerCoordinator:
-    def __init__(self, *, transport_factory=None, service_factory=SearchService, executor=None, clock=time.monotonic):
-        self.transport_factory = transport_factory or (lambda: RabbitTransport(settings.LLM_RABBITMQ_URL))
+    def __init__(
+        self,
+        *,
+        transport_factory=None,
+        service_factory=SearchService,
+        executor=None,
+        clock=time.monotonic,
+    ):
+        self.transport_factory = transport_factory or (
+            lambda: RabbitTransport(settings.LLM_RABBITMQ_URL)
+        )
         self.service_factory = service_factory
         self.pool_size = settings.LLM_WORKERS
-        self.executor = executor or ThreadPoolExecutor(max_workers=self.pool_size, thread_name_prefix="llm-search")
+        self.executor = executor or ThreadPoolExecutor(
+            max_workers=self.pool_size, thread_name_prefix="llm-search"
+        )
         self.clock = clock
         self.transport = None
         self.futures = set()
@@ -75,10 +88,14 @@ class WorkerCoordinator:
                 self.transport.maintain()
                 capacity = max(0, self.pool_size - len(self.futures))
                 now = timezone.now()
-                ready = eligible_jobs(now).filter(Q(dispatch_after__isnull=True) | Q(dispatch_after__lte=now))
+                ready = eligible_jobs(now).filter(
+                    Q(dispatch_after__isnull=True) | Q(dispatch_after__lte=now)
+                )
                 for job_id in list(ready.values_list("id", flat=True)[:capacity]):
                     # Reserve dispatch before publishing: ambiguous confirms cannot create a tight duplicate loop.
-                    eligible_jobs(now).filter(pk=job_id).update(dispatch_after=now + timedelta(seconds=30))
+                    eligible_jobs(now).filter(pk=job_id).update(
+                        dispatch_after=now + timedelta(seconds=30)
+                    )
                     self.transport.publish(job_id)
                 for _ in range(capacity):
                     self.futures.add(self.executor.submit(self._consume_one))

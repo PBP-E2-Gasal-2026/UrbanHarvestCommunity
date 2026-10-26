@@ -1,10 +1,11 @@
 from django.db import connection
 from django.test import TransactionTestCase
 from django.test.utils import CaptureQueriesContext
-from llm_searching.tests.contract_app.models import Category, Product
-from llm_searching.marketplace import MarketplaceRepository
+
+from llm_searching.exceptions import InvalidSearch, MarketplaceUnavailable
 from llm_searching.filters import parse_filters
-from llm_searching.exceptions import MarketplaceUnavailable, InvalidSearch
+from llm_searching.marketplace import MarketplaceRepository
+from llm_searching.tests.contract_app.models import Category, Product
 
 
 class MarketplaceTests(TransactionTestCase):

@@ -1,8 +1,10 @@
 from unittest.mock import Mock
+
 from django.test import SimpleTestCase
+
+from llm_searching.exceptions import InvalidSearch, ProviderUnavailable
 from llm_searching.marketplace import ProductCard
 from llm_searching.service import SearchService
-from llm_searching.exceptions import InvalidSearch, ProviderUnavailable
 
 
 class ServiceTests(SimpleTestCase):

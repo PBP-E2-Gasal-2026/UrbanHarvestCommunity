@@ -43,3 +43,9 @@ GREEN: 5 API/template tests passed; full suite 45/45 passed. CSS build and node 
 REFACTOR: formatting; full suite 45/45 passed.
 Login tests create the app-specific Session row, exercising SingleSessionMiddleware.
 JSON rendering uses textContent and the reusable card template; no model prose is inserted as HTML.
+
+### Task 5
+RED: transport/coordinator absent (7ed90f0).
+GREEN: 7 broker tests; extended bounded pool/backoff coverage brings task tests to 9; full suite 54/54 passed.
+REFACTOR: sorted imports, lint cleanup, tuple Meta indexes, and resource formatting; full suite 54/54 passed.
+Pika pinned 1.3.2; confirmed APIs against its tagged primary source.

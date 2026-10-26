@@ -1,19 +1,23 @@
 """AMQP boundary. Each instance belongs to exactly one thread."""
-from dataclasses import dataclass
+
 import json
 import uuid
+from dataclasses import dataclass
 
 import pika
 
 from .openrouter import load_json
 
+
 class BrokerUnavailable(Exception):
     pass
+
 
 @dataclass(frozen=True)
 class Delivery:
     tag: object
     job_id: uuid.UUID
+
 
 class RabbitTransport:
     queue = "llm.search"
@@ -46,15 +50,23 @@ class RabbitTransport:
 
     def publish(self, job_id):
         try:
-            self.channel.basic_publish(exchange="", routing_key=self.queue,
-                body=json.dumps({"job_id": str(job_id)}).encode(), mandatory=True,
-                properties=pika.BasicProperties(content_type="application/json", delivery_mode=2))
+            self.channel.basic_publish(
+                exchange="",
+                routing_key=self.queue,
+                body=json.dumps({"job_id": str(job_id)}).encode(),
+                mandatory=True,
+                properties=pika.BasicProperties(
+                    content_type="application/json", delivery_mode=2
+                ),
+            )
         except (pika.exceptions.AMQPError, OSError) as exc:
             raise BrokerUnavailable("RabbitMQ publish not confirmed") from exc
 
     def receive(self):
         try:
-            method, properties, body = self.channel.basic_get(queue=self.queue, auto_ack=False)
+            method, _properties, body = self.channel.basic_get(
+                queue=self.queue, auto_ack=False
+            )
             if method is None:
                 return None
             try:

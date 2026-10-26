@@ -1,5 +1,5 @@
-from dataclasses import asdict, dataclass
 import unicodedata
+from dataclasses import asdict, dataclass
 
 from .exceptions import InvalidSearch, UnsafeSearch
 
@@ -57,9 +57,12 @@ def parse_filters(payload: dict) -> SearchFilters:
         value = data.get(key)
         if value is not None and (type(value) is not int or not 0 <= value <= 10**12):
             raise InvalidSearch("Harga harus berupa bilangan bulat nonnegatif.")
-    if data.get("min_price") is not None and data.get("max_price") is not None:
-        if data["min_price"] > data["max_price"]:
-            raise InvalidSearch("Rentang harga terbalik.")
+    if (
+        data.get("min_price") is not None
+        and data.get("max_price") is not None
+        and data["min_price"] > data["max_price"]
+    ):
+        raise InvalidSearch("Rentang harga terbalik.")
     if type(data.get("limit", 20)) is not int or not 1 <= data.get("limit", 20) <= 50:
         raise InvalidSearch("Batas hasil harus 1–50.")
     if type(data.get("in_stock", False)) is not bool:

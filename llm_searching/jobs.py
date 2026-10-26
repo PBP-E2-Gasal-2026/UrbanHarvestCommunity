@@ -1,8 +1,8 @@
 """Durable job state; transactions never span external HTTP requests."""
 
-from datetime import timedelta
 import logging
 import uuid
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -91,7 +91,7 @@ def process_job(job_id, service):
             "explanation": "Pencarian belum dapat diselesaikan. Silakan coba lagi.",
             "degraded": False,
         }
-    except Exception:
+    except Exception:  # noqa: BLE001 - job boundary must persist a safe failure without leaking upstream details
         # No exception text: upstream errors can contain prompts, tokens or SQL parameters.
         logger.error(
             "LLM search job failed unexpectedly", extra={"job_id": str(job_id)}

@@ -1,12 +1,14 @@
 from datetime import timedelta
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
+
+from llm_searching.exceptions import MarketplaceUnavailable, QueueFull
+from llm_searching.jobs import claim_job, finish_job, process_job, submit_job
 from llm_searching.models import SearchJob
-from llm_searching.jobs import submit_job, claim_job, finish_job, process_job
-from llm_searching.exceptions import QueueFull, MarketplaceUnavailable
 
 
 class JobsTests(TestCase):

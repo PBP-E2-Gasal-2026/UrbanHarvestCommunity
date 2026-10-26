@@ -1,6 +1,7 @@
 from django.test import SimpleTestCase
-from llm_searching.filters import parse_filters, validate_prompt
+
 from llm_searching.exceptions import InvalidSearch
+from llm_searching.filters import parse_filters, validate_prompt
 
 
 class FiltersTests(SimpleTestCase):

@@ -1,4 +1,5 @@
 import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -31,9 +32,9 @@ class SearchJob(models.Model):
     attempts = models.PositiveIntegerField(default=0)
 
     class Meta:
-        indexes = [
+        indexes = (
             models.Index(
                 fields=["status", "created_at"], name="llm_job_status_created"
             ),
             models.Index(fields=["owner", "status"], name="llm_job_owner_status"),
-        ]
+        )
