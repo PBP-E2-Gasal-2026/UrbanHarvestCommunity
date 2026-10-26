@@ -162,3 +162,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = 'authentication:login'
+
+# LLM credentials remain server-side.
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
