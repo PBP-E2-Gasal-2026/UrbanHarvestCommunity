@@ -190,7 +190,7 @@ class OpenRouterClient:
                 "https://openrouter.ai/api/v1/chat/completions",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "model": "google/gemma-3-27b-it",
+                    "model": "google/gemma-3-27b-it:free",
                     "temperature": 0,
                     "max_tokens": 2000,
                     "provider": {"require_parameters": True},
