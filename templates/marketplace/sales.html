@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Pesanan Masuk | Urban Harvest Community{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl px-4 pt-32 pb-24 sm:px-6">
+  <a href="{% url 'marketplace:my_products' %}" class="text-sm text-muted hover:text-white">&larr; Produk saya</a>
+  <h1 class="mt-4 text-4xl font-semibold tracking-tight">Pesanan masuk</h1>
+  {% include 'marketplace/_messages.html' %}
+  {% include 'marketplace/_order_list.html' with seller_view=True empty_text='Belum ada pesanan masuk di sini.' %}
+</section>
+{% endblock %}

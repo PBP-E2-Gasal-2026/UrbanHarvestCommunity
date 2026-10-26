@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Produk Saya | Urban Harvest Community{% endblock %}
+
+{% block footer %}{% include 'marketplace/_footer_compact.html' %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl px-4 pt-32 pb-20 sm:px-6">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <h1 class="font-display text-3xl font-semibold">Produk saya</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'marketplace:sales' %}" class="btn btn-ghost btn-sm">Pesanan masuk</a>
+      <a href="{% url 'marketplace:seller_store' request.user.username %}" class="btn btn-ghost btn-sm">Lihat toko</a>
+      <a href="{% url 'marketplace:product_create' %}" class="btn btn-brand btn-sm">Tambah produk</a>
+    </div>
+  </div>
+
+  {% include 'marketplace/_messages.html' %}
+
+  <h2 class="mt-10 text-sm font-semibold text-muted">Aktif ({{ active_products|length }})</h2>
+  {% if active_products %}
+    <div class="divide-y divide-line">
+      {% for product in active_products %}{% include 'marketplace/_my_product_row.html' %}{% endfor %}
+    </div>
+  {% else %}
+    <p class="py-10 text-center text-muted">Belum ada produk aktif.</p>
+  {% endif %}
+
+  {% if archived_products %}
+    <h2 class="mt-10 text-sm font-semibold text-muted">Diarsipkan ({{ archived_products|length }})</h2>
+    <div class="divide-y divide-line opacity-70">
+      {% for product in archived_products %}{% include 'marketplace/_my_product_row.html' %}{% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (!confirm(form.dataset.confirm)) event.preventDefault();
+    });
+  });
+</script>
+{% endblock %}
