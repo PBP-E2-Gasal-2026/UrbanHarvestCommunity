@@ -19,16 +19,24 @@ ERROR_MESSAGES = {
     "search_failed": "Pencarian belum dapat diselesaikan. Silakan coba lagi.",
 }
 
+
 @login_required(login_url="authentication:login")
 @require_GET
 def search(request):
     return render(request, "llm_searching/search.html")
 
+
 @never_cache
 @require_POST
 def create_job(request):
     if not request.user.is_authenticated:
-        return JsonResponse({"error_code": "login_required", "message": "Silakan masuk terlebih dahulu."}, status=401)
+        return JsonResponse(
+            {
+                "error_code": "login_required",
+                "message": "Silakan masuk terlebih dahulu.",
+            },
+            status=401,
+        )
     try:
         if request.content_type != "application/json" or len(request.body) > 12000:
             raise InvalidSearch("Kirim prompt sebagai JSON yang valid.")
@@ -38,22 +46,45 @@ def create_job(request):
         job = submit_job(request.user.pk, payload["prompt"])
     except (ValueError, UnicodeError, InvalidSearch) as exc:
         message = str(exc) if isinstance(exc, InvalidSearch) else "JSON tidak valid."
-        return JsonResponse({"error_code": "invalid_search", "message": message}, status=400)
+        return JsonResponse(
+            {"error_code": "invalid_search", "message": message}, status=400
+        )
     except QueueFull as exc:
         return JsonResponse({"error_code": exc.code, "message": str(exc)}, status=429)
     except OperationalError:
-        return JsonResponse({"error_code": "temporarily_unavailable", "message": "Pencarian sedang sibuk. Silakan coba lagi."}, status=503)
-    return JsonResponse({"id": str(job.pk), "status": job.status,
-                         "status_url": reverse("llm_searching:job_status", args=[job.pk])}, status=202)
+        return JsonResponse(
+            {
+                "error_code": "temporarily_unavailable",
+                "message": "Pencarian sedang sibuk. Silakan coba lagi.",
+            },
+            status=503,
+        )
+    return JsonResponse(
+        {
+            "id": str(job.pk),
+            "status": job.status,
+            "status_url": reverse("llm_searching:job_status", args=[job.pk]),
+        },
+        status=202,
+    )
+
 
 @never_cache
 @require_GET
 def job_status(request, job_id):
     if not request.user.is_authenticated:
-        return JsonResponse({"error_code": "login_required", "message": "Silakan masuk terlebih dahulu."}, status=401)
+        return JsonResponse(
+            {
+                "error_code": "login_required",
+                "message": "Silakan masuk terlebih dahulu.",
+            },
+            status=401,
+        )
     job = get_object_or_404(SearchJob, pk=job_id, owner_id=request.user.pk)
     result = dict(job.result)
     result.update(id=str(job.pk), status=job.status, error_code=job.error_code)
     if job.status == "failed":
-        result["explanation"] = ERROR_MESSAGES.get(job.error_code, ERROR_MESSAGES["search_failed"])
+        result["explanation"] = ERROR_MESSAGES.get(
+            job.error_code, ERROR_MESSAGES["search_failed"]
+        )
     return JsonResponse(result)

@@ -36,3 +36,10 @@ REFACTOR: formatting; full suite 40/40 passed.
 Lease minimum 180 seconds covers two bounded provider calls; finalization is fenced by token and expiry.
 Quota locks the owner only during admission; marketplace adapter remains account-table-free.
 PostgreSQL race behavior has not been verified against a live PostgreSQL server.
+
+### Task 4
+RED: missing routes/templates produced 404 and absent status_url (ad0f316).
+GREEN: 5 API/template tests passed; full suite 45/45 passed. CSS build and node --check passed.
+REFACTOR: formatting; full suite 45/45 passed.
+Login tests create the app-specific Session row, exercising SingleSessionMiddleware.
+JSON rendering uses textContent and the reusable card template; no model prose is inserted as HTML.
