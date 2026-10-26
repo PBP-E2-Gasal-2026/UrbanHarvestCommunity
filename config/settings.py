@@ -173,3 +173,7 @@ LOGIN_URL = 'authentication:login'
 
 # LLM credentials remain server-side.
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+
+# Keep job deadlines longer than both bounded OpenRouter requests combined.
+LLM_MAX_ACTIVE_JOBS = int(os.getenv("LLM_MAX_ACTIVE_JOBS", "3"))
+LLM_LEASE_SECONDS = max(180, int(os.getenv("LLM_LEASE_SECONDS", "180")))
