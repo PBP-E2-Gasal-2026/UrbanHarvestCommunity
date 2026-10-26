@@ -7,7 +7,6 @@ from django.db import models
 
 ROLE_CHOICES = (
     ('admin', 'Admin'),
-    ('user', 'User'),
     ('farmer', 'Farmer'),
     ('farmer-seller', 'Farmer-Seller'),
 )
@@ -98,3 +97,59 @@ class Session(models.Model):
 
     def __str__(self):
         return f"Session for {self.user.username} - Expires at {self.expires_at}"
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    bio = models.TextField(blank=True)
+    location = models.CharField(max_length=150, blank=True)
+    community = models.CharField(max_length=150, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Profil {self.user.username}"
+
+class SellerApplication(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Menunggu'
+        APPROVED = 'approved', 'Disetujui'
+        REJECTED = 'rejected', 'Ditolak'
+
+    applicant = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='seller_applications'
+    )
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    admin_note = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reviewed_seller_applications',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']  # noqa: RUF012
+        constraints = [  # noqa: RUF012
+            models.UniqueConstraint(
+                fields=['applicant'],
+                condition=models.Q(status='pending'),
+                name='one_pending_seller_application_per_user',
+            ),
+        ]
+
+    def __str__(self):
+        return f"Pengajuan {self.applicant.username} ({self.status})"
+
+class Merchant(models.Model):
+    owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='merchant')
+    name = models.CharField(max_length=150)
+    description = models.TextField(blank=True)
+    location = models.CharField(max_length=150, blank=True)
+    show_location = models.BooleanField(default=True)
+    contact = models.CharField(max_length=150, blank=True)
+    show_contact = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
