@@ -99,3 +99,37 @@ class WorkerTests(TransactionTestCase):
         self.worker.tick()
         job.refresh_from_db()
         self.assertEqual(job.status, "succeeded")
+
+    def test_healthy_pool_and_dispatch_remain_bounded(self):
+        class QueuedExecutor:
+            def __init__(self): self.calls = []
+            def submit(self, fn, *args):
+                self.calls.append((fn, args))
+                return Future()
+            def shutdown(self, wait=True): pass
+        queued = QueuedExecutor()
+        self.worker.executor = queued
+        from django.test import override_settings
+        with override_settings(LLM_MAX_ACTIVE_JOBS=10):
+            for _ in range(6): submit_job(self.user.pk, "tomat")
+        self.worker.tick()
+        self.assertEqual(len(self.worker.futures), 4)
+        self.assertEqual(len(self.broker.queue), 4)
+        self.worker.tick()
+        self.assertEqual(len(self.worker.futures), 4)
+        self.assertEqual(len(self.broker.queue), 4)
+
+    def test_reconnect_backoff_avoids_hot_loop(self):
+        self.broker.available = False
+        self.worker.tick()
+        self.assertEqual(self.worker.retry_at, 1)
+        self.clock = 1
+        self.worker.tick()
+        self.assertEqual(self.worker.retry_at, 3)
+        self.clock = 2
+        self.broker.available = True
+        self.worker.tick()
+        self.assertFalse(self.worker.broker_healthy)
+        self.clock = 3
+        self.worker.tick()
+        self.assertTrue(self.worker.broker_healthy)
