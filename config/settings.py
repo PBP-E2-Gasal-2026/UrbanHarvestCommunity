@@ -177,3 +177,6 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 # Keep job deadlines longer than both bounded OpenRouter requests combined.
 LLM_MAX_ACTIVE_JOBS = int(os.getenv("LLM_MAX_ACTIVE_JOBS", "3"))
 LLM_LEASE_SECONDS = max(180, int(os.getenv("LLM_LEASE_SECONDS", "180")))
+
+LLM_RABBITMQ_URL = os.getenv("LLM_RABBITMQ_URL", "")
+LLM_WORKERS = max(1, min(16, int(os.getenv("LLM_WORKERS", "4"))))
