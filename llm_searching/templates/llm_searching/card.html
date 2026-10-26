@@ -1,0 +1,12 @@
+<article class="rounded-2xl border border-white/15 bg-white/5 overflow-hidden">
+    <a data-product-link href="{{ product.url }}" class="block h-full">
+        <img data-product-image src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-44 object-cover" loading="lazy" {% if not product.image_url %}hidden{% endif %}>
+        <div class="p-5 space-y-2">
+            <p data-product-category class="text-sm text-emerald-300">{{ product.category.name }}</p>
+            <h3 data-product-name class="text-lg font-semibold">{{ product.name }}</h3>
+            <p data-product-price>Rp{{ product.price }}/{{ product.unit }}</p>
+            <p data-product-location class="text-sm text-white/70">{{ product.location }}</p>
+            <p data-product-stock class="text-sm text-white/70">Stok: {{ product.stock }}</p>
+        </div>
+    </a>
+</article>
