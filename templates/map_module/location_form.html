@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if mode == 'create' %}Tambah lokasi{% else %}Ubah lokasi{% endif %} · Peta Kebun{% endblock %}
+
+{% block meta %}{% include 'map_module/_leaflet_css.html' %}<link rel="stylesheet" href="{% static 'css/map.css' %}">{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-3xl px-4 pt-28 pb-12 sm:px-6 lg:px-8">
+    <nav aria-label="Navigasi" class="mb-4 text-sm">
+        <a href="{% url 'map_module:my_locations' %}" class="link">← Lokasi saya</a>
+    </nav>
+
+    <h1 class="font-display text-3xl font-semibold text-white">
+        {% if mode == 'create' %}Tambah lokasi{% else %}Ubah lokasi{% endif %}
+    </h1>
+    <p class="mt-2 text-sm text-muted">Pilih titik di peta atau isi koordinat. Lokasi aktif akan tampil di peta publik.</p>
+
+    <form method="post" novalidate class="mt-8 space-y-5">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="rounded-2xl border border-danger-border bg-danger-tint px-4 py-3 text-sm text-danger" role="alert">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        <fieldset class="space-y-5">
+            <legend class="label">Ringkasan publik <span class="font-normal text-muted">(terlihat semua orang)</span></legend>
+            {% include 'map_module/_field.html' with field=form.kind %}
+            {% include 'map_module/_field.html' with field=form.name %}
+            {% include 'map_module/_field.html' with field=form.managed_by %}
+            {% include 'map_module/_field.html' with field=form.area %}
+            {% include 'map_module/_field.html' with field=form.commodities %}
+            {% include 'map_module/_field.html' with field=form.schedule %}
+            {% include 'map_module/_field.html' with field=form.description %}
+            {% include 'map_module/_field.html' with field=form.photo_url %}
+        </fieldset>
+
+        <fieldset class="space-y-3">
+            <legend class="label">Posisi di peta</legend>
+            <div class="map-shell relative isolate overflow-hidden rounded-2xl border border-line bg-surface">
+                <div id="point-map" class="h-72 w-full" role="region" aria-label="Peta untuk memilih posisi"
+                     data-editable="true" data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}"
+                     data-name="{{ form.name.value|default:'Lokasi baru' }}"></div>
+                <p id="point-map-fallback" class="absolute inset-0 z-10 flex items-center justify-center bg-surface p-6 text-center text-sm text-muted" hidden>
+                    Peta tidak dapat dimuat. Isi latitude dan longitude secara manual.
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button type="button" id="use-my-location" class="btn btn-secondary btn-sm" hidden>Gunakan lokasi saya</button>
+                <p id="point-status" role="status" class="text-xs text-muted"></p>
+            </div>
+            <div class="grid gap-5 sm:grid-cols-2">
+                {% include 'map_module/_field.html' with field=form.latitude %}
+                {% include 'map_module/_field.html' with field=form.longitude %}
+            </div>
+        </fieldset>
+
+        <fieldset class="space-y-5">
+            <legend class="label">Detail <span class="font-normal text-muted">(mengikuti pilihan Anda)</span></legend>
+            {% include 'map_module/_field.html' with field=form.address %}
+            {% include 'map_module/_field.html' with field=form.contact_info %}
+            {% include 'map_module/_field.html' with field=form.detail_visibility %}
+        </fieldset>
+
+        <div class="flex items-center gap-3">
+            {{ form.is_active }}
+            <label for="{{ form.is_active.id_for_label }}" class="text-sm font-semibold text-label">{{ form.is_active.label }}</label>
+        </div>
+        {% for error in form.is_active.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        <div class="flex flex-wrap gap-3 pt-2">
+            <button type="submit" class="btn btn-primary">{% if mode == 'create' %}Simpan lokasi{% else %}Simpan perubahan{% endif %}</button>
+            <a href="{% url 'map_module:my_locations' %}" class="btn btn-secondary">Batal</a>
+        </div>
+    </form>
+</section>
+{% include 'map_module/_point_marker.html' %}
+{% endblock %}
+
+{% block extra_js %}
+{% include 'map_module/_leaflet_js.html' %}
+<script src="{% static 'js/map-point.js' %}" defer></script>
+{% endblock %}
