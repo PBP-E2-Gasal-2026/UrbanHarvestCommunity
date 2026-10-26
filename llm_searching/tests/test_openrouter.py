@@ -48,6 +48,7 @@ class OpenRouterTests(SimpleTestCase):
         self.assertEqual(kwargs["headers"]["Authorization"], "Bearer private-key")
         self.assertNotIn("private-key", json.dumps(kwargs["json"]))
         self.assertEqual(kwargs["json"]["response_format"]["type"], "json_schema")
+        self.assertEqual(kwargs["json"]["messages"][-1]["content"], "cari tomat")
 
     def test_invalid_external_responses_are_safe_errors(self):
         bodies = [

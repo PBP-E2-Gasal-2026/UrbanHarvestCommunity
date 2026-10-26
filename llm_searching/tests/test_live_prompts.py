@@ -4,6 +4,7 @@ import os
 from unittest import skipUnless
 
 from django.test import SimpleTestCase
+
 from llm_searching.openrouter import OpenRouterClient
 
 
@@ -12,6 +13,44 @@ from llm_searching.openrouter import OpenRouterClient
 )
 class LivePromptTests(SimpleTestCase):
     categories = ("sayuran", "buah", "bibit", "kompos", "media-tanam")
+
+    def test_cheapest_vegetable_recommendation_is_a_category_search(self):
+        result = OpenRouterClient().extract(
+            "rekomendasikan sayuran kepada saya dengan harga termurah", self.categories
+        )
+        self.assertEqual(result["status"], "search")
+        self.assertEqual(result["filters"]["categories"], ["sayuran"])
+        self.assertFalse(result["filters"].get("keyword"))
+        self.assertEqual(result["filters"]["sort"], "price_asc")
+        self.assertEqual(result["unsupported_conditions"], [])
+
+    def test_obvious_product_and_city_typos_preserve_budget(self):
+        result = OpenRouterClient().extract(
+            "tolong cariin tomta di dpok maksimal 30 ribu", self.categories
+        )
+        self.assertEqual(result["status"], "search")
+        self.assertEqual(result["filters"]["keyword"].casefold(), "tomat")
+        self.assertEqual(result["filters"]["location"].casefold(), "depok")
+        self.assertEqual(result["filters"]["max_price"], 30000)
+        self.assertEqual(result["unsupported_conditions"], [])
+
+    def test_typo_in_category_still_supports_cheapest_search(self):
+        result = OpenRouterClient().extract(
+            "rekomndasikan syuran yang termurah", self.categories
+        )
+        self.assertEqual(result["status"], "search")
+        self.assertEqual(result["filters"]["categories"], ["sayuran"])
+        self.assertFalse(result["filters"].get("keyword"))
+        self.assertEqual(result["filters"]["sort"], "price_asc")
+
+    def test_unseen_typo_variants_generalize_beyond_prompt_examples(self):
+        result = OpenRouterClient().extract(
+            "rekomendasikan sayruan paling murha", self.categories
+        )
+        self.assertEqual(result["status"], "search")
+        self.assertEqual(result["filters"]["categories"], ["sayuran"])
+        self.assertFalse(result["filters"].get("keyword"))
+        self.assertEqual(result["filters"]["sort"], "price_asc")
 
     def test_product_name_alone_is_enough_to_search(self):
         result = OpenRouterClient().extract("carikan saya tomat", self.categories)
