@@ -9,11 +9,14 @@ from llm_searching.worker import WorkerCoordinator
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
     help = "Run one LLM search coordinator (RabbitMQ pool or serial local fallback)."
 
     def add_arguments(self, parser):
-        parser.add_argument("--once", action="store_true", help="Run one coordinator tick and exit.")
+        parser.add_argument(
+            "--once", action="store_true", help="Run one coordinator tick and exit."
+        )
         parser.add_argument("--poll-interval", type=float, default=1.0)
 
     def handle(self, *args, **options):

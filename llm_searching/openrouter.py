@@ -123,10 +123,10 @@ class OpenRouterClient:
             envelope = load_json(body.decode("utf-8"))
             content = envelope["choices"][0]["message"]["content"]
             if not isinstance(content, str):
-                raise ValueError("Response content must be text")
+                raise TypeError("Response content must be text")
             payload = load_json(content)
             if not isinstance(payload, dict):
-                raise ValueError("Response must be an object")
+                raise TypeError("Response must be an object")
             return payload
         except (
             requests.RequestException,
