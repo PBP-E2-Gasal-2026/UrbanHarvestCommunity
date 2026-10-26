@@ -24,6 +24,7 @@ urlpatterns = [
     path('auth/', include('authentication.urls')),
     path('marketplace/', include('marketplace.urls')),
     path('map/', include('map_module.urls')),
+    path('llm-search/', include('llm_searching.urls')),
     path('admin/', admin.site.urls),
 ]
 
