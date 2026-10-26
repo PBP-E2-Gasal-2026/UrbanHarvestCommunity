@@ -7,6 +7,7 @@ import requests
 from django.conf import settings
 
 from .exceptions import ProviderUnavailable
+from .provider_http import bounded_post
 
 FILTER_SCHEMA = {
     "type": "object",
@@ -83,7 +84,7 @@ class OpenRouterClient:
         self.api_key = (
             getattr(settings, "OPENROUTER_API_KEY", "") if api_key is None else api_key
         )
-        self.request = request or requests.post
+        self.request = request or bounded_post
 
     def _complete(self, system, data, schema, name):
         if not self.api_key:
