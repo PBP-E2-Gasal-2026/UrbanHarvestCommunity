@@ -51,7 +51,7 @@ def _active_filters(params, categories):
     elif params['min_price'] is not None or params['max_price'] is not None:
         low = rupiah(params['min_price'] or 0)
         high = rupiah(params['max_price']) if params['max_price'] is not None else '∞'
-        chips.append({'label': f'{low} – {high}', 'param': 'min_price', 'value': ''})
+        chips.append({'label': f'{low} – {high}', 'param': 'min_price max_price', 'value': ''})
     if params['location']:
         chips.append({'label': params['location'], 'param': 'location', 'value': ''})
     if params['in_stock']:
@@ -105,6 +105,9 @@ def catalog_view(request):
         'all_count': sum(c.product_count for c in categories),
         'params': params,
         'has_filters': filtered,
+        'custom_price': not params['price_range'] and (
+            params['min_price'] is not None or params['max_price'] is not None
+        ),
         'active_filters': _active_filters(params, categories),
         'sections': [] if filtered or map_view else category_sections(limit=10),
         'price_ranges': [(key, label) for key, (label, _, _) in PRICE_RANGES.items()],

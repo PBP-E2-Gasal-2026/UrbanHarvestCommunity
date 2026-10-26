@@ -74,7 +74,7 @@
           <legend class="mb-3 text-xs font-medium tracking-wide text-muted uppercase">Harga</legend>
           <div class="flex flex-col gap-2.5">
             <label class="flex cursor-pointer items-center gap-3 text-sm text-body transition hover:text-white">
-              <input type="radio" name="price_range" value="" class="control" {% if not params.price_range %}checked{% endif %}>
+              <input type="radio" name="price_range" value="" class="control" {% if not params.price_range and not custom_price %}checked{% endif %}>
               Semua harga
             </label>
             {% for value, label in price_ranges %}
@@ -84,6 +84,22 @@
               </label>
             {% endfor %}
           </div>
+          <div class="mt-4 flex items-center gap-2">
+            <label class="min-w-0 flex-1">
+              <span class="sr-only">Harga minimum</span>
+              <input type="number" name="min_price" min="0" step="500" inputmode="numeric" placeholder="Min"
+                     value="{% if custom_price and params.min_price is not None %}{{ params.min_price }}{% endif %}" data-price-input
+                     class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none">
+            </label>
+            <span class="text-muted" aria-hidden="true">–</span>
+            <label class="min-w-0 flex-1">
+              <span class="sr-only">Harga maksimum</span>
+              <input type="number" name="max_price" min="0" step="500" inputmode="numeric" placeholder="Maks"
+                     value="{% if custom_price and params.max_price is not None %}{{ params.max_price }}{% endif %}" data-price-input
+                     class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none">
+            </label>
+          </div>
+          <p class="mt-2 text-xs text-muted">Isi sendiri harga minimum dan maksimum (Rp).</p>
         </fieldset>
 
         <fieldset>
@@ -184,6 +200,18 @@
       refresh(0);
     });
     form.querySelector('input[name="location"]').addEventListener('input', () => refresh(350));
+
+    // Harga min/maks diisi sendiri -> pilihan rentang harga dilepas, begitu juga sebaliknya.
+    const priceInputs = form.querySelectorAll('[data-price-input]');
+    priceInputs.forEach(function (input) {
+      input.addEventListener('input', function () {
+        form.querySelectorAll('input[name="price_range"]').forEach((radio) => (radio.checked = false));
+        refresh(450);
+      });
+    });
+    form.querySelectorAll('input[name="price_range"]').forEach(function (radio) {
+      radio.addEventListener('change', () => priceInputs.forEach((input) => (input.value = '')));
+    });
     searchInput.addEventListener('input', function () {
       // Ada kata kunci -> urutkan paling relevan, seperti marketplace pada umumnya.
       form.elements.sort.value = searchInput.value.trim() ? 'relevance' : 'newest';
@@ -201,9 +229,9 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
         refresh(0);
       } else if (remove) {
-        const { removeParam: param, removeValue: value } = remove.dataset;
-        if (param === 'q') searchInput.value = '';
-        form.querySelectorAll(`[name="${param}"]`).forEach(function (input) {
+        const { removeParam, removeValue: value } = remove.dataset;
+        if (removeParam === 'q') searchInput.value = '';
+        removeParam.split(' ').forEach((param) => form.querySelectorAll(`[name="${param}"]`).forEach(function (input) {
           if (input.type === 'checkbox') {
             if (!value || input.value === value) input.checked = false;
           } else if (input.type === 'radio') {
@@ -211,7 +239,7 @@
           } else {
             input.value = '';
           }
-        });
+        }));
         refresh(0);
       } else if (clear) {
         searchInput.value = '';

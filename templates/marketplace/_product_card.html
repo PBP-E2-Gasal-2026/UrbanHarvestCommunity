@@ -21,11 +21,14 @@
       <a href="{% url 'marketplace:product_detail' product.pk %}" class="after:absolute after:inset-0 focus-visible:outline-none">{{ product.name }}</a>
     </h3>
     <p class="mt-1 text-[15px] font-medium text-white/90">{{ product.price|rupiah }} <span class="text-sm font-normal text-white/60">/ {{ product.unit }}</span></p>
+    <p class="mt-1.5 truncate text-xs text-white/65">
+      {{ product.merchant_name }} · {{ product.location }} ·
+      {% if product.is_available %}Stok {{ product.stock }}{% else %}<span class="text-danger">Habis</span>{% endif %}
+    </p>
 
     <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 ease-out group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-within:grid-rows-[1fr] group-focus-within:opacity-100">
       <div class="overflow-hidden">
         <p class="mt-2 line-clamp-2 text-sm text-white/75">{{ product.description|default:"Produk segar dari kebun urban." }}</p>
-        <p class="mt-2 text-xs text-white/60">{% if product.is_available %}Stok {{ product.stock }}{% else %}Stok habis{% endif %} · {{ product.location }}</p>
         {% if product.is_available %}
           <form method="post" action="{% url 'marketplace:cart_add' product.pk %}" data-add-to-cart class="relative z-10 mt-4">
             {% csrf_token %}

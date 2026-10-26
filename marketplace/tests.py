@@ -429,6 +429,25 @@ class CatalogAjaxTests(MarketplaceTestCase):
         self.assertEqual([s['category'].name for s in sections], ['Bibit', 'Sayuran'])
         self.assertEqual([p.name for p in sections[1]['products']], ['Tomat Cherry', 'Kangkung'])
 
+    def test_card_always_shows_merchant_location_and_stock(self):
+        response = self.client.get(reverse('marketplace:catalog'), {'q': 'tomat cherry'})
+        self.assertContains(response, 'budi · Depok ·')
+        self.assertContains(response, 'Stok 10')
+
+    def test_custom_min_max_price_inputs(self):
+        response = self.client.get(reverse('marketplace:catalog'), {'min_price': 10000, 'max_price': 20000})
+        self.assertTrue(response.context['custom_price'])
+        self.assertContains(response, 'name="min_price" min="0"')
+        self.assertContains(response, 'value="10000"')
+        self.assertEqual([p.name for p in response.context['page_obj']], ['Bibit Cabai'])
+        chip = response.context['active_filters'][0]
+        self.assertEqual((chip['label'], chip['param']), ('Rp10.000 – Rp20.000', 'min_price max_price'))
+
+    def test_preset_range_does_not_fill_custom_inputs(self):
+        response = self.client.get(reverse('marketplace:catalog'), {'price_range': '10k-25k'})
+        self.assertFalse(response.context['custom_price'])
+        self.assertNotContains(response, 'value="10000"')
+
     def test_catalog_with_filters_shows_grid_and_active_filter_chips(self):
         response = self.client.get(reverse('marketplace:catalog'),
                                    {'category': 'sayuran', 'price_range': '10k-25k'})
