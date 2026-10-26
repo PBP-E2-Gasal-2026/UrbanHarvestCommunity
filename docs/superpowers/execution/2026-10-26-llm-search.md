@@ -14,3 +14,9 @@ Source branch at creation: feat/llm_searching; source HEAD 2ac85cc.
 - Ruling: use native managed worktree detached HEAD, rather than manual named branch — platform owns isolation — native branch creation needed before push.
 
 ## TDD evidence
+
+### Task 1
+RED: missing filters/marketplace implementation, test loader reported expected ModuleNotFoundError (5ea27fa).
+GREEN: 7 contract/validation tests; full suite 26/26 passed.
+REFACTOR: formatted focused modules/tests; full suite 26/26 passed.
+Queries captured: SELECT only, product/category projection, LIMIT 20, no auth/seller columns.

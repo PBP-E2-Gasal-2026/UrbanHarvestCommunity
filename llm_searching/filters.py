@@ -3,6 +3,7 @@ import unicodedata
 
 from .exceptions import InvalidSearch, UnsafeSearch
 
+
 @dataclass(frozen=True)
 class SearchFilters:
     keyword: str = ""
@@ -19,12 +20,16 @@ class SearchFilters:
         result["categories"] = list(self.categories)
         return result
 
+
 def validate_prompt(value: object) -> str:
     if not isinstance(value, str) or not value.strip() or len(value) > 2000:
         raise InvalidSearch("Tulis kebutuhan pencarian, maksimal 2.000 karakter.")
-    if any(unicodedata.category(c).startswith("C") and c not in "\n\t\r" for c in value):
+    if any(
+        unicodedata.category(c).startswith("C") and c not in "\n\t\r" for c in value
+    ):
         raise InvalidSearch("Prompt memuat karakter kontrol yang tidak diizinkan.")
     return value.strip()
+
 
 def parse_filters(payload: dict) -> SearchFilters:
     if not isinstance(payload, dict):
@@ -39,8 +44,12 @@ def parse_filters(payload: dict) -> SearchFilters:
             raise InvalidSearch("Kata kunci/lokasi tidak valid.")
         data[key] = value.strip()
     categories = data.get("categories", [])
-    if not isinstance(categories, list) or len(categories) > 20 or any(
-        not isinstance(c, str) or not c.strip() or len(c) > 100 for c in categories
+    if (
+        not isinstance(categories, list)
+        or len(categories) > 20
+        or any(
+            not isinstance(c, str) or not c.strip() or len(c) > 100 for c in categories
+        )
     ):
         raise InvalidSearch("Kategori tidak valid.")
     data["categories"] = tuple(dict.fromkeys(c.strip() for c in categories))
@@ -57,8 +66,15 @@ def parse_filters(payload: dict) -> SearchFilters:
         raise InvalidSearch("Filter stok harus boolean.")
     if data.get("sort", "newest") not in ("newest", "price_asc", "price_desc"):
         raise InvalidSearch("Urutan tidak didukung.")
-    if not (data["keyword"] or data["location"] or data["categories"] or
-            data.get("min_price") is not None or data.get("max_price") is not None or
-            data.get("in_stock")):
-        raise InvalidSearch("Perjelas produk, lokasi, kategori, harga, atau stok yang dicari.")
+    if not (
+        data["keyword"]
+        or data["location"]
+        or data["categories"]
+        or data.get("min_price") is not None
+        or data.get("max_price") is not None
+        or data.get("in_stock")
+    ):
+        raise InvalidSearch(
+            "Perjelas produk, lokasi, kategori, harga, atau stok yang dicari."
+        )
     return SearchFilters(**data)
