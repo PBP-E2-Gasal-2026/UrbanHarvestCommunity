@@ -1,6 +1,6 @@
 # LLM Search Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implementasikan pencarian bahasa natural dan suggestion berbasis produk marketplace nyata untuk pengguna login, sesuai kontrak PDF.
 
@@ -21,7 +21,7 @@
 - Prompt maksimum 2.000 karakter; hasil default 20, maksimum 50; maksimal 3 job aktif per pengguna.
 - RabbitMQ sehat: pool 4 thread; fallback: satu worker lokal pada satu coordinator aktif per deployment.
 - Connect timeout OpenRouter 5 detik, read timeout 30 detik per panggilan; polling 2 detik; retensi job 24 jam.
-- Worktree terpisah dan commit red → green → refactor; jangan push, merge, atau deploy sebagai bagian pengerjaan ini.
+- Commit red → green → refactor. Awalnya worktree terpisah; atas instruksi pengguna, seluruh history di-fast-forward ke checkout utama dan pengerjaan dilanjutkan di sana. Jangan push atau deploy otomatis.
 - Tes DB fixture tidak membuktikan integrasi akhir dengan marketplace yang belum tersedia.
 
 ## Review Focus
@@ -51,12 +51,12 @@
 
 ## Persiapan eksekusi
 
-- [ ] Gunakan skill using-git-worktrees; periksa git-dir/common-dir, branch, status, dan tools worktree native sebelum fallback Git.
-- [ ] Jika belum ada preferensi path, pakai `.worktrees/llm-search`; pastikan di-ignore sebelum `git worktree add -b feat/llm-search`.
-- [ ] Bawa spec dan plan yang baru dibuat ke worktree tanpa menghapus perubahan pengguna. Commit dokumentasi awal di branch fitur; bersihkan hanya salinan dokumen yang dibuat agent di checkout awal setelah salinan aman.
-- [ ] Gunakan venv repo yang tersedia atau venv terisolasi. Periksa dependensi; jangan membaca/menyalin secret `.env` ke output.
-- [ ] Jalankan `python manage.py test` dan `python manage.py check` sebagai baseline. Catat jumlah tes dan kegagalan sebelum perubahan.
-- [ ] Buat execution log berisi branch/path, baseline, dan tabel siklus red/green/refactor.
+- [x] Gunakan skill using-git-worktrees; periksa git-dir/common-dir, branch, status, dan tools worktree native sebelum fallback Git.
+- [x] Jika belum ada preferensi path, pakai `.worktrees/llm-search`; pastikan di-ignore sebelum `git worktree add -b feat/llm-search`.
+- [x] Bawa spec dan plan yang baru dibuat ke worktree tanpa menghapus perubahan pengguna. Commit dokumentasi awal di branch fitur; bersihkan hanya salinan dokumen yang dibuat agent di checkout awal setelah salinan aman.
+- [x] Gunakan venv repo yang tersedia atau venv terisolasi. Periksa dependensi; jangan membaca/menyalin secret `.env` ke output.
+- [x] Jalankan `python manage.py test` dan `python manage.py check` sebagai baseline. Catat jumlah tes dan kegagalan sebelum perubahan.
+- [x] Buat execution log berisi branch/path, baseline, dan tabel siklus red/green/refactor.
 
 ### Task 1: Filter dan adapter marketplace baca
 
@@ -69,12 +69,12 @@
 - `MarketplaceRepository.category_slugs() -> list[str]`; query eksplisit dan berbatas, tidak full Product scan.
 - Exception `InvalidSearch`, `UnsafeSearch`, `MarketplaceUnavailable` dibedakan.
 
-- [ ] **RED:** tambahkan tes batas prompt, unknown key/lookup/SQL payload, bool sebagai harga, rentang terbalik, limit >50, kategori salah tipe, dan sort tak dikenal. Contoh assertion: `parse_filters({"max_price": 30000}).max_price == 30000`; payload `{"seller__email": "x"}` wajib ditolak.
-- [ ] **RED:** fixture produk aktif/nonaktif, stock nol, kategori, dua harga sama. Assert hasil filter, batas 20/50, urutan stabil, URL angka, prioritas image, dan tidak ada nama merchant. Capture query aktual dan assert SELECT hanya product/category, tanpa tabel auth.
-- [ ] Jalankan `python manage.py test llm_searching.tests.test_filters llm_searching.tests.test_marketplace -v 2`; pastikan kegagalan mencerminkan fitur yang belum ada. Commit `test(llm-search): red filter and marketplace contract`.
-- [ ] **GREEN:** implementasikan filter allowlist dan adapter lazy dengan proyeksi kolom eksplisit. Missing model/schema mismatch menjadi `MarketplaceUnavailable`; jangan menyamarkannya menjadi hasil kosong. Jangan menggunakan manager/properti yang melakukan join tersembunyi.
-- [ ] Jalankan tes Task 1 dan suite repo. Commit `feat(llm-search): green validated marketplace search`.
-- [ ] **REFACTOR:** rapikan konstanta dan pemetaan field/ordering tanpa mengubah perilaku; jalankan tes kembali dan commit bila ada perubahan nyata. Rekam bukti di execution log.
+- [x] **RED:** tambahkan tes batas prompt, unknown key/lookup/SQL payload, bool sebagai harga, rentang terbalik, limit >50, kategori salah tipe, dan sort tak dikenal. Contoh assertion: `parse_filters({"max_price": 30000}).max_price == 30000`; payload `{"seller__email": "x"}` wajib ditolak.
+- [x] **RED:** fixture produk aktif/nonaktif, stock nol, kategori, dua harga sama. Assert hasil filter, batas 20/50, urutan stabil, URL angka, prioritas image, dan tidak ada nama merchant. Capture query aktual dan assert SELECT hanya product/category, tanpa tabel auth.
+- [x] Jalankan `python manage.py test llm_searching.tests.test_filters llm_searching.tests.test_marketplace -v 2`; pastikan kegagalan mencerminkan fitur yang belum ada. Commit `test(llm-search): red filter and marketplace contract`.
+- [x] **GREEN:** implementasikan filter allowlist dan adapter lazy dengan proyeksi kolom eksplisit. Missing model/schema mismatch menjadi `MarketplaceUnavailable`; jangan menyamarkannya menjadi hasil kosong. Jangan menggunakan manager/properti yang melakukan join tersembunyi.
+- [x] Jalankan tes Task 1 dan suite repo. Commit `feat(llm-search): green validated marketplace search`.
+- [x] **REFACTOR:** rapikan konstanta dan pemetaan field/ordering tanpa mengubah perilaku; jalankan tes kembali dan commit bila ada perubahan nyata. Rekam bukti di execution log.
 
 ### Task 2: OpenRouter, ekstraksi, dan suggestion grounded
 
@@ -85,13 +85,13 @@
 - `OpenRouterClient.suggest(prompt: str, filters: SearchFilters, candidates: list[ProductCard]) -> dict`: output ID kandidat terurut dan reason codes per ID.
 - `SearchService.run(prompt: str) -> dict`: hasil JSON-serializable dengan `status`, `filters`, `products`, `explanation`, dan `degraded`.
 
-- [ ] **RED:** tes HTTP adapter melalui transport mock: model tepat, auth header hanya server, connect/read timeout `(5, 30)`, respons invalid/oversized, missing choices, HTTP error, serta schema-invalid JSON ditolak.
-- [ ] **RED:** tes pencarian fixture dan pipeline: kosong meminta klarifikasi, prompt jumlah kilogram/tanggal panen di luar kemampuan masuk jalur klarifikasi tanpa query produk, suggestion ID asing/duplikat ditolak, alasan harus dapat dibuktikan. Sisipkan instruksi palsu di deskripsi produk dan pastikan tidak menjadi akses tool/query bebas.
-- [ ] Jalankan `python manage.py test llm_searching.tests.test_openrouter llm_searching.tests.test_service -v 2`; commit `test(llm-search): red extraction and grounded suggestions`.
-- [ ] **GREEN:** gunakan HTTP requests dan JSON Schema saat endpoint mendukungnya; validasi lokal tetap wajib. Skema menolak field tambahan. Jangan fallback dari output invalid menjadi query lebih luas. Jangan mengirim seluruh katalog, data akun, atau secret ke model.
-- [ ] **GREEN:** validasi subset kandidat/reason codes; bentuk kalimat penjelasan dari fakta dan kode yang valid. Bila suggestion gagal, kembalikan kandidat hasil query dan penjelasan deterministik dengan `degraded=true`. Hasil kosong tidak memanggil suggestion.
-- [ ] Jalankan tes Task 2 dan suite repo. Commit `feat(llm-search): green OpenRouter grounded search`.
-- [ ] **REFACTOR:** satukan parsing/error mapping tanpa menyimpan output mentah; tes ulang dan commit perubahan nyata.
+- [x] **RED:** tes HTTP adapter melalui transport mock: model tepat, auth header hanya server, connect/read timeout `(5, 30)`, respons invalid/oversized, missing choices, HTTP error, serta schema-invalid JSON ditolak.
+- [x] **RED:** tes pencarian fixture dan pipeline: kosong meminta klarifikasi, prompt jumlah kilogram/tanggal panen di luar kemampuan masuk jalur klarifikasi tanpa query produk, suggestion ID asing/duplikat ditolak, alasan harus dapat dibuktikan. Sisipkan instruksi palsu di deskripsi produk dan pastikan tidak menjadi akses tool/query bebas.
+- [x] Jalankan `python manage.py test llm_searching.tests.test_openrouter llm_searching.tests.test_service -v 2`; commit `test(llm-search): red extraction and grounded suggestions`.
+- [x] **GREEN:** gunakan HTTP requests dan JSON Schema saat endpoint mendukungnya; validasi lokal tetap wajib. Skema menolak field tambahan. Jangan fallback dari output invalid menjadi query lebih luas. Jangan mengirim seluruh katalog, data akun, atau secret ke model.
+- [x] **GREEN:** validasi subset kandidat/reason codes; bentuk kalimat penjelasan dari fakta dan kode yang valid. Bila suggestion gagal, kembalikan kandidat hasil query dan penjelasan deterministik dengan `degraded=true`. Hasil kosong tidak memanggil suggestion.
+- [x] Jalankan tes Task 2 dan suite repo. Commit `feat(llm-search): green OpenRouter grounded search`.
+- [x] **REFACTOR:** satukan parsing/error mapping tanpa menyimpan output mentah; tes ulang dan commit perubahan nyata.
 
 ### Task 3: Job durable, kuota, dan lease
 
@@ -104,12 +104,12 @@
 - `process_job(job_id: UUID, service: SearchService) -> bool`.
 - Status `pending`, `processing`, `succeeded`, `needs_clarification`, `failed`.
 
-- [ ] **RED:** tes submit, batas 3 job aktif atomik per pengguna, conditional claim, lease belum kedaluwarsa tak dapat diambil, recovery lease, token lama tak dapat menulis, terminal job tak diulang, prompt/hasil tidak memuat secret, cleanup >24 jam hanya job terminal.
-- [ ] Jalankan `python manage.py test llm_searching.tests.test_jobs -v 2`; commit `test(llm-search): red durable jobs and leases`.
-- [ ] **GREEN:** register app LLM, tambahkan model/migrasi dan helper job. Serialisasi kuota per owner memakai transaksi pendek; tidak ada transaksi panjang saat HTTP LLM. Gunakan lease minimal 120 detik dengan deadline pemrosesan yang konsisten dan token fencing untuk finalisasi.
-- [ ] **GREEN:** cleanup memakai cutoff 24 jam; jangan menghapus job aktif/lease yang masih digunakan. Dokumentasikan perbedaan SQLite dan PostgreSQL dan lakukan tes race backend aktual bila tersedia.
-- [ ] Jalankan tes Task 3, `python manage.py makemigrations --check --dry-run`, dan suite repo. Commit `feat(llm-search): green durable job lifecycle`.
-- [ ] **REFACTOR:** ekstrak transisi status berulang, pertahankan tes claim/ownership; commit perubahan nyata.
+- [x] **RED:** tes submit, batas 3 job aktif atomik per pengguna, conditional claim, lease belum kedaluwarsa tak dapat diambil, recovery lease, token lama tak dapat menulis, terminal job tak diulang, prompt/hasil tidak memuat secret, cleanup >24 jam hanya job terminal.
+- [x] Jalankan `python manage.py test llm_searching.tests.test_jobs -v 2`; commit `test(llm-search): red durable jobs and leases`.
+- [x] **GREEN:** register app LLM, tambahkan model/migrasi dan helper job. Serialisasi kuota per owner memakai transaksi pendek; tidak ada transaksi panjang saat HTTP LLM. Gunakan lease minimal 120 detik dengan deadline pemrosesan yang konsisten dan token fencing untuk finalisasi.
+- [x] **GREEN:** cleanup memakai cutoff 24 jam; jangan menghapus job aktif/lease yang masih digunakan. Dokumentasikan perbedaan SQLite dan PostgreSQL dan lakukan tes race backend aktual bila tersedia.
+- [x] Jalankan tes Task 3, `python manage.py makemigrations --check --dry-run`, dan suite repo. Commit `feat(llm-search): green durable job lifecycle`.
+- [x] **REFACTOR:** ekstrak transisi status berulang, pertahankan tes claim/ownership; commit perubahan nyata.
 
 ### Task 4: API login, UI pencarian, dan kartu
 
@@ -117,12 +117,12 @@
 
 **Interfaces:** halaman `/llm-search/`, POST `/llm-search/api/jobs/`, GET `/llm-search/api/jobs/<uuid>/`. JSON API mengikuti nama field hasil Task 2 dan status Task 3.
 
-- [ ] **RED:** tes Guest redirect/401, user login dengan sesi aplikasi valid, POST CSRF, input 400, kuota 429, job orang lain 404, UUID invalid, method 405, dan status marketplace_unavailable dibedakan dari kebutuhan klarifikasi.
-- [ ] **RED:** tes HTML memuat form berlabel dan kartu dengan URL kontrak; string produk/model berisi HTML harus di-escape; tidak ada API key, nama merchant, atau detail internal di respons.
-- [ ] Jalankan `python manage.py test llm_searching.tests.test_views -v 2`; commit `test(llm-search): red authenticated search interface`.
-- [ ] **GREEN:** implementasikan view tipis, partial kartu reusable, dan polling 2 detik. Polling berhenti di status terminal, menangani logout/network failure, dan memakai textContent untuk teks dinamis. Payload model tidak dirender sebagai HTML. Jangan membangun detail produk marketplace.
-- [ ] Verifikasi tes Task 4, suite repo, dan `npm run build:css`; commit `feat(llm-search): green authenticated search interface`.
-- [ ] **REFACTOR:** satukan formatter kartu/status tanpa mengubah kontrak; tes ulang dan commit perubahan nyata.
+- [x] **RED:** tes Guest redirect/401, user login dengan sesi aplikasi valid, POST CSRF, input 400, kuota 429, job orang lain 404, UUID invalid, method 405, dan status marketplace_unavailable dibedakan dari kebutuhan klarifikasi.
+- [x] **RED:** tes HTML memuat form berlabel dan kartu dengan URL kontrak; string produk/model berisi HTML harus di-escape; tidak ada API key, nama merchant, atau detail internal di respons.
+- [x] Jalankan `python manage.py test llm_searching.tests.test_views -v 2`; commit `test(llm-search): red authenticated search interface`.
+- [x] **GREEN:** implementasikan view tipis, partial kartu reusable, dan polling 2 detik. Polling berhenti di status terminal, menangani logout/network failure, dan memakai textContent untuk teks dinamis. Payload model tidak dirender sebagai HTML. Jangan membangun detail produk marketplace.
+- [x] Verifikasi tes Task 4, suite repo, dan `npm run build:css`; commit `feat(llm-search): green authenticated search interface`.
+- [x] **REFACTOR:** satukan formatter kartu/status tanpa mengubah kontrak; tes ulang dan commit perubahan nyata.
 
 ### Task 5: RabbitMQ, coordinator, dan pemulihan fallback
 
@@ -133,24 +133,24 @@
 - `WorkerCoordinator.tick() -> None`: satu siklus dispatch/consume/fallback, jam dan transport dapat diinjeksi saat tes.
 - `python manage.py run_llm_worker`: loop terbatas oleh stop event/signal, satu coordinator aktif per deployment.
 
-- [ ] **RED:** transport test double memodelkan broker sehat, publish-confirm ambigu, putus sesudah delivery, redelivery, reconnect, dan shutdown. Assert job durable tetap dapat selesai, ID message saja, lease mencegah finalisasi ganda, maksimal satu pekerjaan baru lokal ketika broker mati, dan pool dipulihkan setelah reconnect.
-- [ ] **RED:** tes bounded inflight/pending dispatch, backoff reconnect, expired lease recovery, poison message, dan kehilangan koneksi yang tidak menghentikan worker command.
-- [ ] Jalankan `python manage.py test llm_searching.tests.test_worker llm_searching.tests.test_transport -v 2`; commit `test(llm-search): red broker recovery and serial fallback`.
-- [ ] **GREEN:** tambahkan Pika versi kompatibel, verifikasi API dari dokumentasi primer sebelum memakainya. Durable queue, persistent message, publisher confirms, manual ack, prefetch bounded, dan koneksi DB/AMQP per thread.
-- [ ] **GREEN:** coordinator mempertahankan job DB sebagai sumber kebenaran, mengekang publish ulang, memakai deadline/lease Task 3, membiarkan inflight selesai sebelum serial fallback mengambil pekerjaan lain. Reconnect dengan backoff 1–30 detik; success memulihkan pool 4 thread. Tidak membuat fallback di setiap web process.
-- [ ] Jalankan tes Task 5 dan suite repo. Bila broker lokal tersedia, lakukan smoke broker sehat → stop → fallback → start → recovery. Catat jika hanya transport double dapat diverifikasi. Commit `feat(llm-search): green resilient RabbitMQ worker`.
-- [ ] **REFACTOR:** rapikan lifecycle resource/signal dan hilangkan duplikasi recovery; verifikasi ulang failure scenarios dan commit perubahan nyata.
+- [x] **RED:** transport test double memodelkan broker sehat, publish-confirm ambigu, putus sesudah delivery, redelivery, reconnect, dan shutdown. Assert job durable tetap dapat selesai, ID message saja, lease mencegah finalisasi ganda, maksimal satu pekerjaan baru lokal ketika broker mati, dan pool dipulihkan setelah reconnect.
+- [x] **RED:** tes bounded inflight/pending dispatch, backoff reconnect, expired lease recovery, poison message, dan kehilangan koneksi yang tidak menghentikan worker command.
+- [x] Jalankan `python manage.py test llm_searching.tests.test_worker llm_searching.tests.test_transport -v 2`; commit `test(llm-search): red broker recovery and serial fallback`.
+- [x] **GREEN:** tambahkan Pika versi kompatibel, verifikasi API dari dokumentasi primer sebelum memakainya. Durable queue, persistent message, publisher confirms, manual ack, prefetch bounded, dan koneksi DB/AMQP per thread.
+- [x] **GREEN:** coordinator mempertahankan job DB sebagai sumber kebenaran, mengekang publish ulang, memakai deadline/lease Task 3, membiarkan inflight selesai sebelum serial fallback mengambil pekerjaan lain. Reconnect dengan backoff 1–30 detik; success memulihkan pool 4 thread. Tidak membuat fallback di setiap web process.
+- [x] Jalankan tes Task 5 dan suite repo. Bila broker lokal tersedia, lakukan smoke broker sehat → stop → fallback → start → recovery. Catat jika hanya transport double dapat diverifikasi. Commit `feat(llm-search): green resilient RabbitMQ worker`.
+- [x] **REFACTOR:** rapikan lifecycle resource/signal dan hilangkan duplikasi recovery; verifikasi ulang failure scenarios dan commit perubahan nyata.
 
 ### Task 6: Dokumentasi, verifikasi akhir, dan review
 
 **Files:** create `docs/llm-search.md`; update README, `.env.example`, execution log, serta status checkbox plan.
 
-- [ ] Dokumentasikan pemasangan dependency, migrasi LLM, API, variabel konfigurasi, menjalankan worker tanpa/dengan RabbitMQ, cleanup, retensi, kuota, sumber data, dan batas satu coordinator.
-- [ ] Dokumentasikan kontrak adapter dan checklist handoff marketplace: model/field/tabel/manager aktual, foto storage, route angka, dan interface merchant. Runtime saat dependency belum hadir harus dijelaskan sebagai unavailable, bukan demo produk nyata.
-- [ ] Catat hash red/green/refactor, command dan hasil tes, batas pengujian nyata OpenRouter/RabbitMQ/PostgreSQL, serta risiko retry API setelah crash.
-- [ ] Jalankan `python manage.py test`, `python manage.py check`, `python manage.py makemigrations --check --dry-run`, lint file Python yang berubah, `npm run build:css`, dan `git diff --check`.
-- [ ] Gunakan skill requesting-code-review untuk review branch keseluruhan; tindaklanjuti temuan dengan tes gagal sebelum perbaikan perilaku. Gunakan verification-before-completion sebelum mengklaim selesai.
-- [ ] Commit dokumentasi/verifikasi; pastikan worktree bersih. Gunakan finishing-a-development-branch untuk melaporkan hasil dan pilihan integrasi tanpa push/merge/deploy otomatis.
+- [x] Dokumentasikan pemasangan dependency, migrasi LLM, API, variabel konfigurasi, menjalankan worker tanpa/dengan RabbitMQ, cleanup, retensi, kuota, sumber data, dan batas satu coordinator.
+- [x] Dokumentasikan kontrak adapter dan checklist handoff marketplace: model/field/tabel/manager aktual, foto storage, route angka, dan interface merchant. Runtime saat dependency belum hadir harus dijelaskan sebagai unavailable, bukan demo produk nyata.
+- [x] Catat hash red/green/refactor, command dan hasil tes, batas pengujian nyata OpenRouter/RabbitMQ/PostgreSQL, serta risiko retry API setelah crash.
+- [x] Jalankan `python manage.py test`, `python manage.py check`, `python manage.py makemigrations --check --dry-run`, lint file Python yang berubah, `npm run build:css`, dan `git diff --check`.
+- [x] Gunakan skill requesting-code-review untuk review branch keseluruhan; tindaklanjuti temuan dengan tes gagal sebelum perbaikan perilaku. Gunakan verification-before-completion sebelum mengklaim selesai.
+- [x] Commit dokumentasi/verifikasi; pastikan worktree bersih. Gunakan finishing-a-development-branch untuk melaporkan hasil dan pilihan integrasi tanpa push/merge/deploy otomatis.
 
 ## Self-review plan
 
@@ -162,7 +162,7 @@ menggunakan hasil JSON yang sama; fixture tidak dimasukkan ke runtime produksi.
 
 ## Execution handoff
 
-Plan menunggu review pengguna. Rekomendasi: native, implementer tetap dalam sesi ini
-karena task bergantung pada antarmuka filter, service, job, dan worker yang sama;
-reviewer independen memeriksa branch di akhir. Alternatif: subagent-driven dengan
-implementer dan reviewer terpisah per task, dengan biaya konteks lebih tinggi.
+Pengguna menyetujui plan dan memilih native implementation. Semua task dijalankan
+dalam sesi ini; reviewer independen memeriksa seluruh branch, lalu dua temuan Important
+diperbaiki melalui tes regresi RED/GREEN. Perubahan tetap di branch feat/llm_searching
+pada checkout utama sesuai instruksi lanjutan pengguna; tidak dipush atau dideploy.

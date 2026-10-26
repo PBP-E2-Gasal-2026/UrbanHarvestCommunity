@@ -203,7 +203,7 @@ Usulan batas yang dapat dikonfigurasi: prompt 2.000 karakter, hasil default 20 d
 maksimum 50 sesuai PDF, pool 4 thread ketika broker sehat, polling 2 detik,
 OpenRouter connect timeout 5 detik dan read timeout 30 detik per panggilan,
 maksimal 3 job aktif per pengguna, serta cleanup job setelah 24 jam.
-Angka ini usulan implementer, belum keputusan pengguna.
+Angka ini berasal dari usulan implementer yang termasuk dalam persetujuan dokumen.
 
 ## Penanganan kegagalan
 
@@ -255,4 +255,6 @@ batas kemampuan filter telah dijawab pengguna dan dimasukkan ke keputusan 9–10
 Tidak ada pertanyaan kebutuhan material yang tersisa dari pemeriksaan tersebut.
 Berikutnya adalah persetujuan dokumen lengkap, termasuk proposal teknis dan batasnya.
 Setelah disetujui, gunakan skill writing-plans untuk menulis rencana implementasi.
-Detail teknis di atas adalah proposal konkret untuk ditinjau, bukan asumsi persetujuan.
+Detail teknis di atas disetujui sebagai bagian dokumen. Instruksi pengguna berikutnya
+meminta pengerjaan dilanjutkan di checkout utama dan history commit dipertahankan;
+lihat execution log untuk transfer fast-forward serta perbaikan hasil review.

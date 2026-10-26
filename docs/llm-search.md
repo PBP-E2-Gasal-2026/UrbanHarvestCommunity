@@ -51,7 +51,12 @@ admission dan menunggu pekerjaan thread selesai; beri grace period setidaknya
 
 Prompt maksimum 2.000 karakter, hasil default 20 dan maksimum 50. Timeout OpenRouter
 5 detik connect dan 30 detik read; body dibatasi 64 KiB dan waktu pembacaan diperiksa
-setiap chunk. Endpoint OpenRouter dan model ditetapkan server. Respons JSON berduplikat
+setiap chunk. Setiap panggilan provider juga dibungkus proses terpisah dengan batas
+waktu total 35 detik, lalu dihentikan dan di-reap jika macet, termasuk respons yang
+terus meneteskan byte tanpa menyelesaikan satu chunk. Proses memakai spawn dan tidak
+mewarisi koneksi database. Deployment perlu mengizinkan proses anak Python; pool
+empat worker dapat memiliki sampai empat proses provider tambahan yang singkat.
+Endpoint OpenRouter dan model ditetapkan server. Respons JSON berduplikat
 key, field/lookup tak dikenal, angka invalid, atau skema salah ditolak.
 
 Untuk development SQLite gunakan `LLM_WORKERS=1` bila memakai broker. PostgreSQL
