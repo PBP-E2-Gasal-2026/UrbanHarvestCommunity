@@ -25,6 +25,32 @@ class Response:
 
 
 class OpenRouterTests(SimpleTestCase):
+    def test_location_capitalization_produces_identical_model_requests(self):
+        payload = {
+            "status": "search",
+            "filters": {
+                "keyword": "segar",
+                "categories": ["sayuran"],
+                "location": "Depok",
+            },
+            "clarification": "",
+            "unsupported_conditions": [],
+        }
+        request = Mock(
+            return_value=Response(
+                json.dumps({"choices": [{"message": {"content": json.dumps(payload)}}]})
+            )
+        )
+        client = OpenRouterClient(api_key="test-key", request=request)
+        client.extract("sayuran segar di sekitar depok", ["sayuran"])
+        first = request.call_args.kwargs["json"]
+        client.extract("sayuran segar di sekitar Depok", ["sayuran"])
+        second = request.call_args.kwargs["json"]
+        self.assertEqual(first, second)
+        self.assertEqual(
+            first["messages"][-1]["content"], "sayuran segar di sekitar depok"
+        )
+
     def test_request_contract_and_valid_response(self):
         payload = {
             "status": "search",

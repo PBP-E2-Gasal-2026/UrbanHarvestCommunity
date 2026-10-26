@@ -111,3 +111,72 @@ class MarketplaceTests(TransactionTestCase):
     def test_unknown_category_rejected(self):
         with self.assertRaises(InvalidSearch):
             self.repo.search(parse_filters({"categories": ["not-real"]}))
+
+    def test_service_removes_redundant_fruit_keyword_before_query(self):
+        from unittest.mock import Mock
+
+        from llm_searching.service import SearchService
+
+        fruit_category = Category.objects.create(name="Buah", slug="buah")
+        fruit = self.create_product(
+            name="Jeruk Lemon", category=fruit_category, price=22000
+        )
+        self.create_product(name="Melon Premium", category=fruit_category, price=80000)
+        client = Mock()
+        client.extract.return_value = {
+            "status": "search",
+            "filters": {"keyword": "buah", "categories": ["buah"], "max_price": 70000},
+            "clarification": "",
+            "unsupported_conditions": [],
+        }
+        client.suggest.return_value = {
+            "suggestions": [{"id": fruit.pk, "reasons": ["within_budget"]}]
+        }
+        result = SearchService(self.repo, client).run(
+            "carikan saya buah buahan dibawah 70 roibu"
+        )
+        self.assertEqual(result["status"], "succeeded")
+        self.assertEqual([card["name"] for card in result["products"]], ["Jeruk Lemon"])
+        self.assertEqual(result["filters"]["keyword"], "")
+        self.assertEqual(result["filters"]["categories"], ["buah"])
+        self.assertEqual(result["filters"]["max_price"], 70000)
+
+    def test_category_and_freshness_search_preserves_city_and_product_constraint(self):
+        from unittest.mock import Mock
+
+        from llm_searching.service import SearchService
+
+        self.tomato.description = "Tomat segar dari kebun di Depok."
+        self.tomato.save(update_fields=["description"])
+        self.create_product(
+            name="Selada",
+            description="Selada segar dari kebun.",
+            category=self.tomato.category,
+            price=12000,
+            location="Bogor",
+        )
+        self.create_product(
+            name="Bibit Sayur",
+            description="Bibit kering untuk ditanam.",
+            category=self.tomato.category,
+            price=10000,
+        )
+        client = Mock()
+        client.extract.return_value = {
+            "status": "search",
+            "filters": {
+                "keyword": "sayuran segar",
+                "categories": ["sayuran"],
+                "location": "Depok",
+            },
+            "clarification": "",
+            "unsupported_conditions": [],
+        }
+        client.suggest.return_value = {
+            "suggestions": [{"id": self.tomato.pk, "reasons": []}]
+        }
+        result = SearchService(self.repo, client).run("sayuran segar di sekitar depok")
+        self.assertEqual(result["status"], "succeeded")
+        self.assertEqual([p["id"] for p in result["products"]], [self.tomato.pk])
+        self.assertEqual(result["filters"]["keyword"], "segar")
+        self.assertEqual(result["filters"]["location"], "Depok")
