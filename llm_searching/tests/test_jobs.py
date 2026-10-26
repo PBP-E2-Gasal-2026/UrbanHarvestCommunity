@@ -8,10 +8,19 @@ from llm_searching.models import SearchJob
 from llm_searching.jobs import submit_job, claim_job, finish_job, process_job
 from llm_searching.exceptions import QueueFull, MarketplaceUnavailable
 
+
 class JobsTests(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user("farmer", "farmer@example.com", "Pass!1234")
-        self.result = {"status": "succeeded", "products": [{"id": 1}], "filters": {}, "explanation": "Tomat", "degraded": False}
+        self.user = get_user_model().objects.create_user(
+            "farmer", "farmer@example.com", "Pass!1234"
+        )
+        self.result = {
+            "status": "succeeded",
+            "products": [{"id": 1}],
+            "filters": {},
+            "explanation": "Tomat",
+            "degraded": False,
+        }
 
     def test_per_owner_active_quota(self):
         for _ in range(3):
@@ -26,7 +35,9 @@ class JobsTests(TestCase):
         first = claim_job(job.pk, now=now)
         self.assertIsNotNone(first)
         self.assertIsNone(claim_job(job.pk, now=now))
-        SearchJob.objects.filter(pk=job.pk).update(lease_expires_at=now-timedelta(seconds=1))
+        SearchJob.objects.filter(pk=job.pk).update(
+            lease_expires_at=now - timedelta(seconds=1)
+        )
         second = claim_job(job.pk, now=now)
         self.assertNotEqual(first, second)
         self.assertFalse(finish_job(job.pk, first, self.result))
@@ -38,7 +49,9 @@ class JobsTests(TestCase):
     def test_expired_owner_cannot_finalize(self):
         job = submit_job(self.user.pk, "tomat")
         token = claim_job(job.pk, now=timezone.now())
-        SearchJob.objects.filter(pk=job.pk).update(lease_expires_at=timezone.now()-timedelta(seconds=1))
+        SearchJob.objects.filter(pk=job.pk).update(
+            lease_expires_at=timezone.now() - timedelta(seconds=1)
+        )
         self.assertFalse(finish_job(job.pk, token, self.result))
 
     def test_processing_terminal_and_safe_error_codes(self):
@@ -57,8 +70,10 @@ class JobsTests(TestCase):
         job = submit_job(self.user.pk, "tomat")
         self.assertTrue(process_job(job.pk, Mock(run=Mock(return_value=self.result))))
         active = submit_job(self.user.pk, "tomat")
-        old = timezone.now()-timedelta(hours=25)
-        SearchJob.objects.filter(pk__in=[job.pk, active.pk]).update(created_at=old, finished_at=old)
+        old = timezone.now() - timedelta(hours=25)
+        SearchJob.objects.filter(pk__in=[job.pk, active.pk]).update(
+            created_at=old, finished_at=old
+        )
         call_command("cleanup_llm_jobs", verbosity=0)
         self.assertFalse(SearchJob.objects.filter(pk=job.pk).exists())
         self.assertTrue(SearchJob.objects.filter(pk=active.pk).exists())
