@@ -49,3 +49,8 @@ RED: transport/coordinator absent (7ed90f0).
 GREEN: 7 broker tests; extended bounded pool/backoff coverage brings task tests to 9; full suite 54/54 passed.
 REFACTOR: sorted imports, lint cleanup, tuple Meta indexes, and resource formatting; full suite 54/54 passed.
 Pika pinned 1.3.2; confirmed APIs against its tagged primary source.
+
+### Task 6: infrastructure evidence (in progress)
+Full PostgreSQL suite: 54/54 passed against a temporary PostgreSQL 16 cluster under /tmp, isolated from the host server.
+Real PostgreSQL races: 2/2 passed (six concurrent admissions -> three accepted; four competing claims -> one token).
+These two tests are additional verification of existing behavior, not represented as new RED cycles.

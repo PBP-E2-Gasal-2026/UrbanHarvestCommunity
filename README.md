@@ -1149,3 +1149,10 @@ Forum membangun interaksi antarpengguna, marketplace membantu distribusi hasil p
 Fitur **LLM Search** menjadi nilai tambah aplikasi karena memungkinkan pengguna mencari komoditas menggunakan bahasa sehari-hari tanpa harus memahami struktur filter marketplace.
 
 Arsitektur fitur dibuat modular sehingga setiap anggota dapat mengembangkan modul secara terpisah, tetapi tetap terhubung melalui kontrak data dan API yang disepakati bersama.
+
+## Implementasi LLM Search
+
+Modul pencarian AI dan suggestion tersedia untuk akun login di `/llm-search/`.
+Panduan setup, worker RabbitMQ/fallback lokal, API, dan handoff marketplace ada di
+[docs/llm-search.md](docs/llm-search.md). Marketplace dikembangkan terpisah; sebelum
+dependency tersebut terpasang, pencarian memberi status `marketplace_unavailable`.
