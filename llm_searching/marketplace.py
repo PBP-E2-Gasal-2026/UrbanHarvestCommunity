@@ -2,6 +2,7 @@ from dataclasses import asdict, dataclass
 from urllib.parse import urlsplit
 
 from django.apps import apps
+from django.core.exceptions import FieldDoesNotExist, FieldError
 from django.core.files.storage import default_storage
 from django.db import DatabaseError, models
 from django.db.models import Q
@@ -55,8 +56,24 @@ class MarketplaceRepository:
                 raise LookupError("Unexpected marketplace tables")
             if product._meta.get_field("category").related_model is not category:
                 raise LookupError("Unexpected category relation")
+            for field in (
+                "id",
+                "name",
+                "description",
+                "image",
+                "image_url",
+                "price",
+                "unit",
+                "stock",
+                "location",
+                "is_active",
+                "updated_at",
+            ):
+                product._meta.get_field(field)
+            for field in ("id", "name", "slug"):
+                category._meta.get_field(field)
             return product, category
-        except (LookupError, AttributeError) as exc:
+        except (LookupError, AttributeError, FieldDoesNotExist, FieldError) as exc:
             raise MarketplaceUnavailable(
                 "Dependency marketplace belum tersedia atau kontraknya berbeda."
             ) from exc
@@ -69,7 +86,7 @@ class MarketplaceRepository:
                 .order_by("slug")
                 .values_list("slug", flat=True)[:200]
             )
-        except DatabaseError as exc:
+        except (DatabaseError, FieldDoesNotExist, FieldError) as exc:
             raise MarketplaceUnavailable(
                 "Kategori marketplace belum tersedia."
             ) from exc
@@ -145,7 +162,13 @@ class MarketplaceRepository:
                     )
                 )
             return cards
-        except (DatabaseError, LookupError, AttributeError) as exc:
+        except (
+            DatabaseError,
+            LookupError,
+            AttributeError,
+            FieldDoesNotExist,
+            FieldError,
+        ) as exc:
             raise MarketplaceUnavailable(
                 "Data marketplace belum kompatibel dengan kontrak."
             ) from exc
