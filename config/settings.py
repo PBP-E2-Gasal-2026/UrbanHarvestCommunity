@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'authentication',
     'marketplace',
     'map_module',
+    'llm_searching',
 ]
 
 MIDDLEWARE = [
