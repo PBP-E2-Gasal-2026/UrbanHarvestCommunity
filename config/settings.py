@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -165,6 +166,9 @@ LOGIN_URL = 'authentication:login'
 
 # LLM credentials remain server-side.
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+
+if not OPENROUTER_API_KEY:
+    raise ImproperlyConfigured("OPENROUTER_API_KEY needs to be set in the environment variables for LLM functionality.")
 
 # Keep job deadlines longer than both bounded OpenRouter requests combined.
 LLM_MAX_ACTIVE_JOBS = int(os.getenv("LLM_MAX_ACTIVE_JOBS", "3"))
