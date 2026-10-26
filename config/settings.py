@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'main',
     'authentication',
     'marketplace',
+    'llm_searching',
 ]
 
 MIDDLEWARE = [
