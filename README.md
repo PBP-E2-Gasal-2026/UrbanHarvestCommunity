@@ -876,6 +876,104 @@ Tanggung jawab utama:
 * Integrasi marketplace dengan merchant.
 * Menyediakan endpoint/data yang dibutuhkan modul LLM Search.
 
+### Dokumentasi Modul Marketplace
+
+Kode modul berada di app `marketplace/` dengan template di `templates/marketplace/`. Tampilan memakai design system tim (`static/css/input.css`).
+
+#### Menjalankan dengan data contoh
+
+```bash
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_marketplace
+npm run build:css
+python manage.py runserver
+```
+
+`seed_marketplace` mengisi 5 kategori, 18 produk dengan foto contoh dari Wikimedia Commons (lisensi terbuka, kredit tercantum di file seed), serta akun demo lokal berikut:
+
+| Peran | Username | Password |
+| --- | --- | --- |
+| Petani - Penjual | `petani_penjual` | `petani-123!` |
+| Petani - Penjual | `kebun_sinta` | `sinta-123!` |
+| Pembeli | `pembeli_demo` | `pembeli-123!` |
+
+#### Model data
+
+| Model | Field utama |
+| --- | --- |
+| `Category` | `name`, `slug`, `description` |
+| `Product` | `seller` (FK ke `User`), `category`, `name`, `description`, `image`, `image_url`, `price` (Rupiah per satuan), `unit`, `stock`, `min_order`, `harvested_at`, `location`, `pickup_address`, `pickup_notes`, `latitude`, `longitude`, `is_active`, `created_at`, `updated_at` |
+| `ProductImage` | `product`, `image`, `position` (maksimal 4 foto tambahan per produk) |
+| `CartItem` | `user`, `product`, `quantity`, `selected` |
+| `Order` | `buyer`, `seller`, `status`, `note`, `cancel_reason`, `total`, `created_at`, `updated_at` |
+| `OrderItem` | `order`, `product`, `product_name`, `price`, `quantity`, `pickup_location` (salinan saat checkout) |
+| `Review` | `order_item`, `product`, `buyer`, `rating` (1–5), `comment` |
+
+#### Halaman
+
+| URL | Akses | Fungsi |
+| --- | --- | --- |
+| `/marketplace/` | Publik | Katalog: cari, filter kategori (bisa lebih dari satu), harga, lokasi, stok, urutan, mode **Daftar / Peta** |
+| `/marketplace/products/<id>/` | Publik | Detail produk: galeri, harga per satuan, rating, terjual, peta titik ambil, ulasan, produk terkait |
+| `/marketplace/sellers/<username>/` | Publik | Halaman toko: rating, terjual, cari dan urutkan di dalam toko |
+| `/marketplace/my-products/` | Petani - Penjual | Kelola produk: tambah, edit, arsipkan, tampilkan lagi, hapus permanen |
+| `/marketplace/products/new/`, `/products/<id>/edit/` | Petani - Penjual (pemilik) | Form produk dengan foto, harga per satuan, minimal beli, dan titik pengambilan di peta |
+| `/marketplace/cart/` | Login | Keranjang per toko, pilih item, checkout |
+| `/marketplace/orders/` | Login | Pesanan saya dan detail pesanan |
+| `/marketplace/sales/` | Petani - Penjual | Pesanan masuk |
+
+#### API JSON (untuk modul LLM Search dan Peta)
+
+| Endpoint | Keterangan |
+| --- | --- |
+| `GET /marketplace/api/search/` | Pencarian produk aktif. Parameter: `q`/`keyword`, `category` (slug atau nama, bisa berulang), `price_range` (`under-10k`, `10k-25k`, `25k-50k`, `over-50k`), `min_price`, `max_price`, `location`, `in_stock`, `sort` (`relevance`, `newest`, `price_asc`, `price_desc`), `limit` (maks. 50). Mengembalikan `params`, `count`, `results` |
+| `GET /marketplace/api/products/<id>/` | Detail satu produk aktif: field yang sama dengan item pencarian, ditambah `url`, `gallery`, `pickup_address`, `pickup_notes`, `harvested_at`, `sold_count`, `rating_avg`, `rating_count`. Produk tidak ada atau diarsipkan menghasilkan `404` |
+
+Seluruh hasil berasal dari database katalog (grounded). Parameter yang tidak valid diabaikan, bukan menimbulkan error. Fungsi yang sama tersedia untuk dipanggil langsung dari Python: `marketplace.services.search_products(params)`.
+
+#### Alur pesanan
+
+1. Pembeli menambahkan produk ke keranjang (jumlah mengikuti stok dan minimal pembelian) atau memakai **Beli sekarang**.
+2. Checkout membuat **satu pesanan per penjual** dan mengurangi stok secara atomik.
+3. Penjual: **Menunggu konfirmasi → Disiapkan → Siap diambil → Selesai**. Penjual dapat menolak pesanan selama belum siap diambil.
+4. Pembeli dapat membatalkan selama pesanan belum dikonfirmasi, dan menekan **Pesanan diterima** saat siap diambil.
+5. Setelah selesai, pembeli dapat memberi ulasan satu kali per produk. Pembatalan mengembalikan stok.
+
+Pembayaran dilakukan saat pengambilan; pembayaran online berada di luar scope awal.
+
+#### Hak akses
+
+* Guest dapat melihat katalog, detail, dan halaman toko.
+* Pengguna login dapat membeli, melihat pesanannya, dan memberi ulasan.
+* Hanya `Petani - Penjual` (dan admin) yang dapat mengelola produk, dan hanya produk miliknya.
+* Penjual tidak dapat membeli produknya sendiri. Pesanan hanya dapat dilihat dan diubah oleh pembeli dan penjualnya.
+
+#### Layanan eksternal
+
+* Peta: Leaflet dengan tile OpenStreetMap dan citra satelit Esri.
+* Pencarian alamat dan pengisian alamat otomatis: Nominatim (OpenStreetMap).
+
+#### Pengujian
+
+```bash
+python manage.py test marketplace
+```
+
+#### Ketergantungan dengan modul lain
+
+* **Autentikasi (Vania):** `Product.seller` sementara merujuk ke `User`. Setelah model `Merchant` tersedia, nama toko dan etalase akan memakai data merchant.
+* **Peta Kebun (Wisnu):** produk menyimpan `latitude`/`longitude`. Urutan berdasarkan jarak terdekat menunggu layanan jarak dari modul peta.
+* **LLM Search (Adrian):** memakai `GET /marketplace/api/search/` atau `search_products()` agar hasil tetap berasal dari katalog.
+
+#### Catatan deployment
+
+Foto yang diunggah disimpan di `media/` dan hanya disajikan otomatis saat `DEBUG=True`. Untuk lingkungan produksi diperlukan penyimpanan media terpisah; sementara itu produk dapat memakai URL foto.
+
+#### AI Disclosure
+
+Dalam pengerjaan modul ini saya menggunakan asisten AI untuk membantu menganalisis alur marketplace, menyusun rancangan, menulis sebagian kode dan pengujian, serta meninjau tampilan. Seluruh hasil telah saya periksa, jalankan, uji, dan sesuaikan dengan kebutuhan proyek, dan saya bertanggung jawab atas kode yang dikumpulkan.
+
 ---
 
 ## 4. Vania Apsari Nailah Putri Difa — 2506615103

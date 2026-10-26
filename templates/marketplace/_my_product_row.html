@@ -1,0 +1,29 @@
+{% load marketplace_tags %}
+<article class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <h3 class="font-medium">{{ product.name }}</h3>
+    <p class="text-sm text-muted">
+      {{ product.category.name }} · {{ product.price|rupiah }} ·
+      {% if product.stock %}Stok {{ product.stock }}{% else %}<span class="text-danger">Habis</span>{% endif %}
+    </p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% if product.is_active %}
+      <a href="{% url 'marketplace:product_detail' product.pk %}" class="btn btn-ghost btn-sm">Lihat</a>
+      <a href="{% url 'marketplace:product_update' product.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+      <form method="post" action="{% url 'marketplace:product_archive' product.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary btn-sm">Arsipkan</button>
+      </form>
+    {% else %}
+      <form method="post" action="{% url 'marketplace:product_archive' product.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary btn-sm">Tampilkan lagi</button>
+      </form>
+      <form method="post" action="{% url 'marketplace:product_delete' product.pk %}" data-confirm="Hapus permanen &quot;{{ product.name }}&quot;? Tindakan ini tidak bisa dibatalkan.">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-sm">Hapus permanen</button>
+      </form>
+    {% endif %}
+  </div>
+</article>

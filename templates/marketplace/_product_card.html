@@ -1,0 +1,42 @@
+{% load marketplace_tags %}
+<article data-product-id="{{ product.pk }}" class="group relative isolate aspect-[4/5] overflow-hidden rounded-[28px] bg-surface-2 shadow-2xl shadow-black/40 ring-1 ring-white/10 transition duration-500 hover:ring-white/20">
+  {% if product.photo_url %}
+    <img src="{{ product.photo_url }}" alt="{{ product.name }}" loading="lazy"
+         class="absolute inset-0 -z-10 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105">
+  {% else %}
+    <span class="absolute inset-0 -z-10 flex items-center justify-center pb-24 text-8xl font-semibold tracking-tight text-white/10" aria-hidden="true">{{ product.name|first|upper }}</span>
+  {% endif %}
+
+  {# Blur bertahap di bagian bawah foto, makin tinggi saat di-hover #}
+  <div class="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[55%] backdrop-blur-2xl transition-all duration-500 ease-out [mask-image:linear-gradient(to_top,black_55%,transparent)] group-hover:h-[80%]"></div>
+  <div class="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[60%] bg-gradient-to-t from-black/75 via-black/35 to-transparent transition-all duration-500 group-hover:h-[85%]"></div>
+
+  {% if not product.is_available %}
+    <span class="absolute top-4 left-4 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-danger backdrop-blur-md">Habis</span>
+  {% endif %}
+
+  <div class="absolute inset-x-0 bottom-0 p-5">
+    <p class="text-[11px] font-semibold tracking-[0.12em] text-white/60 uppercase">{{ product.category.name }}</p>
+    <h3 class="mt-1 text-lg leading-tight font-bold tracking-tight text-white">
+      <a href="{% url 'marketplace:product_detail' product.pk %}" class="after:absolute after:inset-0 focus-visible:outline-none">{{ product.name }}</a>
+    </h3>
+    <p class="mt-1 text-[15px] font-medium text-white/90">{{ product.price|rupiah }} <span class="text-sm font-normal text-white/60">/ {{ product.unit }}</span></p>
+    <p class="mt-1.5 truncate text-xs text-white/65">
+      {{ product.merchant_name }} · {{ product.location }} ·
+      {% if product.is_available %}Stok {{ product.stock }}{% else %}<span class="text-danger">Habis</span>{% endif %}
+    </p>
+
+    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 ease-out group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-within:grid-rows-[1fr] group-focus-within:opacity-100">
+      <div class="overflow-hidden">
+        <p class="mt-2 line-clamp-2 text-sm text-white/75">{{ product.description|default:"Produk segar dari kebun urban." }}</p>
+        {% if product.is_available %}
+          <form method="post" action="{% url 'marketplace:cart_add' product.pk %}" data-add-to-cart class="relative z-10 mt-4">
+            {% csrf_token %}
+            <input type="hidden" name="quantity" value="{{ product.min_order }}">
+            <button type="submit" class="w-full rounded-xl border border-white/20 bg-white/15 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/25">+ Keranjang{% if product.min_order > 1 %} ({{ product.min_order }} {{ product.unit }}){% endif %}</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</article>

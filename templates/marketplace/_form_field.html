@@ -1,0 +1,11 @@
+<div class="field {% if field.errors %}field-has-error{% endif %}">
+  <div class="flex items-baseline justify-between gap-3">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if required %} <span class="text-muted">*</span>{% endif %}</label>
+    {% if counter or counter_min %}
+      <span class="text-xs text-muted tabular-nums" data-counter="{{ field.id_for_label }}" {% if counter %}data-max="{{ counter }}"{% endif %} {% if counter_min %}data-min="{{ counter_min }}"{% endif %}></span>
+    {% endif %}
+  </div>
+  {{ field }}
+  {% for error in field.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+  {% if help %}<p class="field-help">{{ help }}</p>{% endif %}
+</div>

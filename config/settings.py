@@ -15,7 +15,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -49,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main',
     'authentication',
+    'marketplace',
 ]
 
 MIDDLEWARE = [
@@ -76,6 +76,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'marketplace.context_processors.cart',
             ],
         },
     },
@@ -145,6 +146,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 WHITENOISE_USE_FINDERS = True
 
 # Django 5 uses EMAIL_BACKEND; MAILERS is a Django 6 setting.
@@ -156,3 +160,4 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'authentication.User'
+LOGIN_URL = 'authentication:login'
