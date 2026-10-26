@@ -41,7 +41,12 @@ class ProviderDeadlineTests(SimpleTestCase):
                     deadline_seconds=0.5,
                 )
             self.assertLess(time.monotonic() - started, 2)
-            self.assertFalse(any(p.name.startswith("llm-provider-") for p in __import__("multiprocessing").active_children()))
+            self.assertFalse(
+                any(
+                    p.name.startswith("llm-provider-")
+                    for p in __import__("multiprocessing").active_children()
+                )
+            )
         finally:
             server.shutdown()
             server.server_close()
@@ -66,7 +71,10 @@ class ProviderDeadlineTests(SimpleTestCase):
         try:
             response = bounded_post(
                 f"http://127.0.0.1:{server.server_port}/",
-                json={}, timeout=(5, 30), stream=True, deadline_seconds=3,
+                json={},
+                timeout=(5, 30),
+                stream=True,
+                deadline_seconds=3,
             )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(b"".join(response.iter_content(8192)), b'{"choices": []}')
