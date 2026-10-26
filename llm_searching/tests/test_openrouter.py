@@ -1,9 +1,11 @@
 import json
 from unittest.mock import Mock
+
 import requests
 from django.test import SimpleTestCase
-from llm_searching.openrouter import OpenRouterClient
+
 from llm_searching.exceptions import ProviderUnavailable
+from llm_searching.openrouter import OpenRouterClient
 
 
 class Response:
@@ -58,7 +60,7 @@ class OpenRouterTests(SimpleTestCase):
         for body in bodies:
             with self.subTest(body=body[:30]), self.assertRaises(ProviderUnavailable):
                 OpenRouterClient(
-                    api_key="key", request=lambda *a, **k: Response(body)
+                    api_key="key", request=lambda *a, body=body, **k: Response(body)
                 ).extract("tomat", [])
         for failure in (requests.Timeout("secret"), requests.ConnectionError("secret")):
             with self.assertRaises(ProviderUnavailable) as caught:
