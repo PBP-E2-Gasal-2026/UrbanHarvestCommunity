@@ -23,6 +23,7 @@ urlpatterns = [
     path('', include('main.urls')),
     path('auth/', include('authentication.urls')),
     path('marketplace/', include('marketplace.urls')),
+    path('map/', include('map_module.urls')),
     path('admin/', admin.site.urls),
 ]
 
