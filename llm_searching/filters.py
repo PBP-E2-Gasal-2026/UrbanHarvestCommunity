@@ -1,5 +1,5 @@
 import unicodedata
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 
 from .exceptions import InvalidSearch, UnsafeSearch
 
@@ -19,6 +19,49 @@ class SearchFilters:
         result = asdict(self)
         result["categories"] = list(self.categories)
         return result
+
+
+def normalize_category_filters(filters: SearchFilters, category_slugs) -> SearchFilters:
+    """Use known category-only phrases without weakening specific product filters."""
+
+    def category_text(value):
+        return " ".join(value.casefold().replace("-", " ").split())
+
+    known = set(category_slugs)
+    aliases = {category_text(slug): slug for slug in known}
+    for slug, phrases in {
+        "buah": ("buah buahan",),
+        "sayuran": ("sayur", "sayur mayur", "sayur sayuran"),
+    }.items():
+        if slug in known:
+            aliases.update({phrase: slug for phrase in phrases})
+    categories = tuple(
+        dict.fromkeys(
+            aliases.get(category_text(category), category)
+            for category in filters.categories
+        )
+    )
+    keyword = filters.keyword
+    category = aliases.get(category_text(keyword))
+    if category and (not categories or categories == (category,)):
+        keyword = ""
+        categories = (category,)
+    else:
+        # Keep advertised qualities as text constraints; remove only the generic
+        # category prefix. Specific names such as "buah naga" remain untouched.
+        descriptors = {"segar", "organik", "hidroponik", "lokal"}
+        text = category_text(keyword)
+        for label, slug in sorted(aliases.items(), key=lambda item: -len(item[0])):
+            if not text.startswith(label + " "):
+                continue
+            remainder = text[len(label) + 1 :]
+            if set(remainder.split()) <= descriptors and (
+                not categories or categories == (slug,)
+            ):
+                keyword = remainder
+                categories = (slug,)
+                break
+    return replace(filters, keyword=keyword, categories=categories)
 
 
 def validate_prompt(value: object) -> str:
