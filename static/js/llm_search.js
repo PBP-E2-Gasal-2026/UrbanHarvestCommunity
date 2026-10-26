@@ -2,6 +2,23 @@
     "use strict";
     const form = document.getElementById("llm-search-form");
     if (!form) return;
+    const promptShell = document.getElementById("search-prompt-shell");
+    const promptContent = document.getElementById("search-prompt-content");
+    if (promptShell && promptContent) {
+        // Keep the centered prompt geometry, but let following content fill its
+        // unused bottom space. Results still grow the section in normal flow.
+        const closePromptGap = () => {
+            const gap = Math.max(0, promptShell.getBoundingClientRect().bottom - promptContent.getBoundingClientRect().bottom);
+            promptShell.style.marginBottom = `${-gap}px`;
+        };
+        closePromptGap();
+        if (typeof ResizeObserver !== "undefined") {
+            const observer = new ResizeObserver(closePromptGap);
+            observer.observe(promptShell);
+            observer.observe(promptContent);
+        }
+        window.addEventListener("resize", closePromptGap);
+    }
     const status = document.getElementById("search-status");
     const button = form.querySelector("button[type=submit]");
     const result = document.getElementById("search-result");
