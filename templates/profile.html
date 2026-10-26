@@ -1,0 +1,17 @@
+<!--Not fixed, hanya untuk keperluan test-->>
+
+<h1>{{ profile_user.username }}</h1>
+<p>{{ profile.bio }}</p>
+<p>{{ profile.location }}</p>
+<p>{{ profile.community }}</p>
+
+{% if is_owner %}
+  <a href="{% url 'authentication:profile_edit' %}">Edit profil</a>
+{% endif %}
+
+{% if merchant %}
+  <h2>{{ merchant.name }}</h2>
+  <p>{{ merchant.description }}</p>
+  {% if merchant.show_location or is_owner %}<p>{{ merchant.location }}</p>{% endif %}
+  {% if merchant.show_contact or is_owner %}<p>{{ merchant.contact }}</p>{% endif %}
+{% endif %}
