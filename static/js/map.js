@@ -41,10 +41,11 @@
 
   var DEFAULT_CENTER = [-2.5, 118]; // tengah Indonesia
   var DEFAULT_ZOOM = 5;
-  // Tile gelap CARTO (data OpenStreetMap) agar serasi dengan tema gelap di draf Figma.
-  var TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-  var TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors ' +
-    '&copy; <a href="https://carto.com/attributions">CARTO</a>';
+  // Tile standar OpenStreetMap (tanpa API key). Tampilan gelap sesuai draf Figma dibuat
+  // dengan filter CSS pada kelas "map-tiles" (static/css/map.css). Basemap CARTO tidak dipakai:
+  // sejak 2026 CARTO mewajibkan API key dan tanpa key mengembalikan tile "API KEY REQUIRED".
+  var TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  var TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
   var state = {
     origin: null, // {lat, lng} hanya di memori
@@ -63,7 +64,7 @@
   if (window.L) {
     map = L.map('map', { zoomControl: false }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
     L.control.zoom({ position: 'topright', zoomInTitle: 'Perbesar', zoomOutTitle: 'Perkecil' }).addTo(map);
-    L.tileLayer(TILE_URL, { maxZoom: 20, subdomains: 'abcd', attribution: TILE_ATTRIBUTION }).addTo(map);
+    L.tileLayer(TILE_URL, { maxZoom: 19, attribution: TILE_ATTRIBUTION, className: 'map-tiles' }).addTo(map);
     layer = L.layerGroup().addTo(map);
   } else {
     $('map-fallback').hidden = false;

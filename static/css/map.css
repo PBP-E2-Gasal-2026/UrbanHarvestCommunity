@@ -47,7 +47,7 @@
   color: var(--color-muted);
 }
 
-/* Atribusi wajib (OpenStreetMap & CARTO) tetap terbaca tapi tidak mencolok. */
+/* Atribusi wajib (OpenStreetMap) tetap terbaca tapi tidak mencolok. */
 .map-shell .leaflet-control-attribution {
   background: transparent;
   color: var(--color-muted);
@@ -88,4 +88,11 @@
 .map-shell .leaflet-control-attribution {
   font-size: 11px;
   line-height: 1.5;
+}
+
+/* Tile OpenStreetMap standar (terang) dibuat gelap agar serasi dengan draf Figma.
+   invert membalik terang/gelap; hue-rotate(180deg) mengembalikan rona (air tetap kebiruan,
+   taman tetap kehijauan); brightness/contrast/saturate meredam agar menyatu dengan surface. */
+.map-shell .map-tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(0.9) saturate(0.4);
 }

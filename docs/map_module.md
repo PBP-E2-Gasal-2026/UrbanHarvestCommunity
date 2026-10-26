@@ -88,10 +88,13 @@ distance_km, distance_label`. `address`/`contact` kosong bila tidak berhak; `dis
 
 ## Keputusan dan asumsi (menutup butir "Peta" dan "Kontak/lokasi publik" di PRD §10)
 
-- **Penyedia peta:** Leaflet 1.9.4 (dari unpkg, dengan SRI yang dihitung dari paket npm resmi) + tile gelap
-  CARTO `dark_all` (data OpenStreetMap), tanpa API key, agar serasi dengan tema gelap di draf Figma. Atribusi
-  OpenStreetMap dan CARTO wajib tampil (sudah ada). Layanan basemap CARTO gratis untuk pemakaian non-komersial dengan
-  batas kuota; untuk produksi bertrafik tinggi, ganti URL tile di `static/js/map.js` dan `static/js/map-point.js`.
+- **Penyedia peta:** Leaflet 1.9.4 (dari unpkg, dengan SRI yang dihitung dari paket npm resmi) + tile standar
+  OpenStreetMap (`tile.openstreetmap.org`), tanpa API key. Tampilan gelap sesuai draf Figma dibuat dengan filter CSS
+  (`.map-tiles` di `static/css/map.css`). Atribusi OpenStreetMap wajib tampil (sudah ada). Kebijakan tile OSM
+  mengizinkan pemakaian ringan; untuk trafik tinggi, ganti URL tile di `static/js/map.js` dan `static/js/map-point.js`.
+- **Kenapa bukan CARTO:** sejak 2026 basemap raster CARTO (Positron/Dark Matter/Voyager) mewajibkan API key; tanpa key
+  server membalas 200 dengan gambar "API KEY REQUIRED" di setiap tile. Key tile pasti terkirim ke browser, padahal
+  PRD §9 melarang kredensial di klien, jadi dipilih penyedia tanpa key.
 - **Tampilan:** mengikuti draf Figma. Penyimpangan yang disengaja: (1) ada chip & legenda "Kebun petani" karena PRD
   meminta 4 jenis lokasi, sedangkan draf hanya punya 3; (2) titik posisi pengguna memakai token `focus` (hijau),
   bukan biru, karena warna biru tidak ada di design system.
