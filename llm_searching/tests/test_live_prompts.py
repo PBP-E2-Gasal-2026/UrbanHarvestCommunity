@@ -14,6 +14,47 @@ from llm_searching.openrouter import OpenRouterClient
 class LivePromptTests(SimpleTestCase):
     categories = ("sayuran", "buah", "bibit", "kompos", "media-tanam")
 
+    def test_lowercase_and_capitalized_city_preserve_same_category_and_descriptor(self):
+        observed = []
+        for prompt in (
+            "sayuran segar di sekitar depok",
+            "sayuran segar di sekitar Depok",
+        ):
+            with self.subTest(prompt=prompt):
+                result = OpenRouterClient().extract(prompt, self.categories)
+                self.assertEqual(result["status"], "search")
+                filters = result["filters"]
+                self.assertEqual(filters["categories"], ["sayuran"])
+                self.assertEqual(filters["keyword"].casefold(), "segar")
+                self.assertEqual(filters["location"].casefold(), "depok")
+                self.assertEqual(result["unsupported_conditions"], [])
+                observed.append(
+                    (
+                        filters["categories"],
+                        filters["keyword"].casefold(),
+                        filters["location"].casefold(),
+                    )
+                )
+        self.assertEqual(observed[0], observed[1])
+
+    def test_fruit_plural_and_misspelled_thousands_are_category_only(self):
+        result = OpenRouterClient().extract(
+            "carikan saya buah buahan dibawah 70 roibu", self.categories
+        )
+        self.assertEqual(result["status"], "search")
+        self.assertEqual(result["filters"]["categories"], ["buah"])
+        self.assertFalse(result["filters"].get("keyword"))
+        self.assertEqual(result["filters"]["max_price"], 70000)
+        self.assertEqual(result["unsupported_conditions"], [])
+
+    def test_specific_fruit_name_is_not_reduced_to_category_only(self):
+        result = OpenRouterClient().extract(
+            "carikan saya buah naga dibawah 70 ribu", self.categories
+        )
+        self.assertEqual(result["status"], "search")
+        self.assertIn("naga", result["filters"]["keyword"].casefold())
+        self.assertEqual(result["filters"]["max_price"], 70000)
+
     def test_cheapest_vegetable_recommendation_is_a_category_search(self):
         result = OpenRouterClient().extract(
             "rekomendasikan sayuran kepada saya dengan harga termurah", self.categories

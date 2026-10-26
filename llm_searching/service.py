@@ -1,7 +1,7 @@
 """Search orchestration; only database facts become user-visible product claims."""
 
 from .exceptions import InvalidSearch, ProviderUnavailable
-from .filters import parse_filters, validate_prompt
+from .filters import normalize_category_filters, parse_filters, validate_prompt
 from .marketplace import MarketplaceRepository
 from .openrouter import OpenRouterClient
 
@@ -15,7 +15,8 @@ class SearchService:
 
     def run(self, prompt):
         prompt = validate_prompt(prompt)
-        extraction = self.client.extract(prompt, self.repository.category_slugs())
+        category_slugs = self.repository.category_slugs()
+        extraction = self.client.extract(prompt, category_slugs)
         if not isinstance(extraction, dict) or set(extraction) != {
             "status",
             "filters",
@@ -43,7 +44,9 @@ class SearchService:
                 "degraded": False,
                 "explanation": "Mohon perjelas pencarian menggunakan nama produk, kategori, harga per satuan, lokasi, atau stok. Sebagian kriteria belum didukung.",
             }
-        filters = parse_filters(extraction["filters"])
+        filters = normalize_category_filters(
+            parse_filters(extraction["filters"]), category_slugs
+        )
         candidates = self.repository.search(filters)
         if not candidates:
             return {

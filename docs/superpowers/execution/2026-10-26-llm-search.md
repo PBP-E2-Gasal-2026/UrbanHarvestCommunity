@@ -193,3 +193,65 @@ Follow-up verification result:
 
 Temporary RabbitMQ container removed after verifying its ownership label; isolated
 PostgreSQL cluster stopped. Existing host services were left running unchanged.
+
+## Follow-up: plural category phrases and redundant keywords
+
+The reported prompt `carikan saya buah buahan dibawah 70 roibu` was found in the
+stored job result with categories `[buah]`, keyword `buah`, and max_price 70000.
+The extra keyword excluded fruit products whose names/descriptions do not contain
+the generic word. A live extraction regression reproduced this output, and a
+real-database service regression reproduced the resulting empty search.
+
+The prompt now distinguishes category plurals/synonyms from specific product names
+and interprets the obvious `roibu` unit typo. Backend normalization independently
+maps category-only phrases to available category slugs and removes a keyword that
+duplicates its single matching category. It preserves specific names such as
+`buah naga`, conflicting/multiple category constraints, all price/location/stock
+limits, and does not invent missing marketplace categories.
+
+Focused offline verification: 21 tests passed. Live verification of the exact input
+passed. The real seeded pipeline produced category `buah`, empty keyword and
+max_price 70000; it returned Pepaya California, Jeruk Lemon and Melon Golden with
+the suggestion stage completing without degradation. Full and live regression
+suite totals are recorded below after completion. No follow-up commit was created.
+
+Final follow-up verification: full suite 192 tests, 181 passed and 11 opt-in/backend
+skips; separate live Gemma suite 9/9 passed, including specific fruit names and
+all earlier typo/price regressions. Ruff, Django checks, migration dry run,
+formatting and whitespace checks passed. Changes remain uncommitted.
+
+## Follow-up: location capitalization and category descriptors
+
+Stored job evidence showed both location fields already contained Depok. The
+lowercase-input extraction instead added keyword `sayuran segar`, while the
+capitalized-input extraction omitted the keyword. Database location matching was
+already case-insensitive; the inconsistent model interpretation caused the failure.
+
+Three regressions failed before the fix: differing outbound model requests for
+capitalization variants, failure to preserve a freshness descriptor independently
+from its category, and an actual database service search returning clarification.
+Extraction now sends a case-folded prompt (the original stored prompt is retained).
+The instructions distinguish a named-city location from an explicit geographic
+radius and split category `sayuran` from the textual descriptor `segar`. Backend
+normalization also retains recognized descriptive words while stripping a redundant
+category prefix; specific product names and explicit constraints remain intact.
+
+Focused verification: 19 tests passed. A live Gemma regression tested both original
+capitalization variants and passed with category sayuran, keyword segar, and location
+depok. The actual seeded repository returned identical Bayam Merah and Tomat Cherry
+Organik IDs for location depok and Depok. The full-suite result is recorded below.
+The first live permission review timed out before execution; its single retry was
+approved and the live check completed. No safety rejection or credential exposure
+occurred. Changes remain uncommitted.
+
+Final verification for this follow-up: the sandbox-only full run reported two
+PermissionError failures when localhost HTTP fixtures tried to bind sockets. The
+rerun with the required local-server permission passed: 196 tests, 184 passed and
+12 opt-in/backend skips. Both live location-case variants passed, and the actual
+seeded database returned identical product IDs for both city spellings. Ruff,
+formatting, Django system checks, migration dry run and whitespace checks passed.
+No follow-up commit was created.
+
+The user subsequently approved a refactor commit covering both the plural-category
+normalization and capitalization/descriptor follow-ups, including their tests and
+documentation. Existing stash objects remain untouched.

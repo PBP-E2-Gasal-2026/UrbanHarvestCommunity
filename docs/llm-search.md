@@ -94,10 +94,28 @@ memakai kategori, misalnya `rekomendasikan sayuran kepada saya dengan harga
 termurah`: kategori menjadi `sayuran`, keyword tetap kosong, dan sorting memakai
 `price_asc`. Kata "murah" tidak menambahkan batas anggaran yang tidak diminta.
 
+Kategori berbentuk jamak seperti `buah buahan`/`buah-buahan` dipetakan ke kategori
+`buah`, dengan keyword kosong. Misalnya `carikan saya buah buahan dibawah 70 roibu`
+menghasilkan kategori `buah` dan `max_price=70000`, sehingga Jeruk atau Pepaya
+tidak harus mempunyai kata "buah" pada namanya agar ditemukan.
+
+Backend juga menormalisasi keyword yang seluruhnya merupakan alias kategori yang
+tersedia. Jika model memberi kategori `buah` sekaligus keyword `buah`, keyword
+redundan dihapus sebelum query. Harga, lokasi, stok, sort dan limit tetap sama.
+Nama spesifik seperti `buah naga` serta keyword yang dipakai bersama kategori
+berbeda tidak dihapus; alias tidak membuat kategori yang tidak ada di marketplace.
+
 Ekstraksi menoleransi typo ringan dan bahasa santai yang maksudnya jelas, termasuk
 nama produk, kategori, dan kota. Angka serta batas harga eksplisit tetap dipertahankan.
 Jika tafsir tidak jelas, sistem meminta klarifikasi. Koreksi ini dilakukan pada
 interpretasi prompt; tidak mengambil seluruh katalog atau menjalankan SQL model.
+
+Kapitalisasi prompt dinormalisasi hanya saat dikirim ke tahap ekstraksi; prompt asli
+tetap tersimpan. `sayuran segar di sekitar depok` dan versi dengan `Depok` memakai
+interpretasi yang sama: kategori `sayuran`, keyword `segar`, dan lokasi Depok.
+Backend memisahkan awalan kategori dari sifat tekstual yang dikenal seperti
+`segar`, tanpa membuang sifat tersebut. Ini merupakan pencocokan kata pada nama
+atau deskripsi produk, bukan jaminan tanggal panen/kesegaran yang tidak diverifikasi.
 
 Untuk sorting harga eksplisit, daftar hasil tetap mengikuti query database. Tahap
 suggestion hanya menambahkan alasan yang tervalidasi dan tidak dapat menghilangkan
