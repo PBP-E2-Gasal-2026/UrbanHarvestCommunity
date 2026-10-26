@@ -150,3 +150,131 @@
     @apply font-semibold text-brand-soft hover:underline;
   }
 }
+
+/* Style halaman login & register (dari develop) */
+@layer components {
+  .register-form,
+  .login-form {
+    width: 100%;
+    max-width: 34rem;
+  }
+
+  .register-field label,
+  .login-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #d1fae5;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .register-field input,
+  .login-field input {
+    display: block;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid rgb(255 255 255 / 0.25);
+    border-radius: 0.5rem;
+    background: rgb(255 255 255 / 0.08);
+    color: white;
+  }
+
+  .register-field input:focus-visible,
+  .login-field input:focus-visible {
+    outline: 2px solid #34d399;
+    outline-offset: 2px;
+  }
+
+  .auth-link {
+    color: #6ee7b7;
+    font-weight: 600;
+  }
+
+  .auth-link:hover {
+    color: #a7f3d0;
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .register-page {
+      padding-top: 7rem;
+    }
+
+    .register-form,
+    .login-form {
+      max-width: 100%;
+    }
+  }
+}
+
+/* Kontrol form gaya minimalis untuk filter marketplace */
+@layer components {
+  .control {
+    @apply h-4 w-4 shrink-0 cursor-pointer appearance-none border border-white/25 bg-white/5 transition;
+    @apply checked:border-brand checked:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .control[type="checkbox"] {
+    @apply rounded-[5px];
+  }
+  .control[type="checkbox"]:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 8.5 2.5 2.5L12 5.5'/%3E%3C/svg%3E");
+  }
+  .control[type="radio"] {
+    @apply rounded-full;
+  }
+  .control[type="radio"]:checked {
+    @apply border-[5px] bg-white;
+  }
+}
+
+/* Mode peta marketplace: label harga dan kartu mini */
+@layer components {
+  .price-pin {
+    @apply inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-ink shadow-lg shadow-black/40 ring-1 ring-black/10 transition;
+  }
+  .price-pin.is-sold-out {
+    @apply bg-surface-2 text-muted ring-white/10;
+  }
+  .price-pin:hover,
+  .price-pin.is-active {
+    @apply scale-110 bg-brand text-white;
+  }
+  .map-card {
+    @apply flex flex-col text-white no-underline;
+  }
+  .map-card-photo {
+    @apply block aspect-[16/10] w-full bg-surface-2 object-cover;
+  }
+  .map-card-body {
+    @apply flex flex-col gap-0.5 p-3;
+  }
+  .map-card-name {
+    @apply text-sm font-semibold;
+  }
+  .map-card-price {
+    @apply text-sm;
+  }
+  .map-card-meta {
+    @apply text-xs text-muted;
+  }
+}
+
+/* Di luar @layer agar menang atas CSS Leaflet yang tidak ber-layer. */
+.leaflet-container.leaflet-container {
+  @apply bg-surface font-sans;
+}
+.leaflet-container .map-popup .leaflet-popup-content-wrapper {
+  @apply overflow-hidden rounded-2xl bg-canvas/90 p-0 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-xl;
+}
+.leaflet-container .map-popup .leaflet-popup-content {
+  @apply m-0 w-56;
+}
+.leaflet-container .map-popup .leaflet-popup-tip {
+  @apply bg-canvas/90;
+}
+.leaflet-container a.map-card {
+  @apply text-white;
+}

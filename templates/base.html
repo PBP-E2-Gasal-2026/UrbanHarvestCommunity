@@ -12,13 +12,13 @@
     {% block meta %}{% endblock %}
 </head>
 <body class="min-h-screen flex flex-col bg-canvas font-sans text-white antialiased selection:bg-brand selection:text-white">
-    {% include 'includes/navbar.html' %}
+    {% block navbar %}{% include 'includes/navbar.html' %}{% endblock %}
 
     <main class="flex-grow">
         {% block content %}{% endblock %}
     </main>
 
-    {% include 'includes/footer.html' %}
+    {% block footer %}{% include 'includes/footer.html' %}{% endblock %}
 
     {% block extra_js %}{% endblock %}
 
