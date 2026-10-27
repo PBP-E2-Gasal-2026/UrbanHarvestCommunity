@@ -30,6 +30,11 @@ jobs:
 
   run-tests:
     runs-on: ubuntu-latest
+    env:
+      PRODUCTION: "False"
+      OPENROUTER_API_KEY: "ci-test-placeholder"
+      LLM_RABBITMQ_URL: ""
+      LLM_RUN_LIVE_TESTS: "0"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
