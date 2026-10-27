@@ -18,7 +18,7 @@ class SearchJob(models.Model):
         on_delete=models.CASCADE,
         related_name="llm_search_jobs",
     )
-    prompt = models.CharField(max_length=2000)
+    prompt = models.TextField()
     status = models.CharField(
         max_length=24, choices=State.choices, default=State.PENDING
     )

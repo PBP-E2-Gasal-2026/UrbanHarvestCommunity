@@ -65,8 +65,12 @@ def normalize_category_filters(filters: SearchFilters, category_slugs) -> Search
 
 
 def validate_prompt(value: object) -> str:
-    if not isinstance(value, str) or not value.strip() or len(value) > 2000:
-        raise InvalidSearch("Tulis kebutuhan pencarian, maksimal 2.000 karakter.")
+    if not isinstance(value, str):
+        raise InvalidSearch("Tulis kebutuhan pencarian, maksimal 500 kata.")
+    if len(value) > 5000:
+        raise InvalidSearch("Prompt maksimal 5.000 karakter, termasuk spasi.")
+    if not value.strip() or len(value.split()) > 500:
+        raise InvalidSearch("Tulis kebutuhan pencarian, maksimal 500 kata.")
     if any(
         unicodedata.category(c).startswith("C") and c not in "\n\t\r" for c in value
     ):

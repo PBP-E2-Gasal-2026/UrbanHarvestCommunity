@@ -21,6 +21,25 @@
     }
     const status = document.getElementById("search-status");
     const button = form.querySelector("button[type=submit]");
+    const prompt = form.elements.prompt;
+    const wordCount = document.getElementById("search-word-count");
+    let isSubmitting = false;
+    function updateWordCount() {
+        const count = prompt.value.match(/\S+/gu)?.length || 0;
+        const characters = Array.from(prompt.value).length;
+        const overLimit = count > 500 || characters > 5000;
+        const message = characters > 5000 ? "Maksimal 5.000 karakter, termasuk spasi. Persingkat pencarian." :
+            (count > 500 ? "Maksimal 500 kata. Kurangi kata sebelum mencari." : "");
+        wordCount.textContent = `${count}/500 kata${overLimit ? " — " + message : ""}`;
+        wordCount.classList.toggle("text-danger", overLimit);
+        wordCount.classList.toggle("text-white/70", !overLimit);
+        prompt.setCustomValidity(message);
+        prompt.setAttribute("aria-invalid", String(overLimit));
+        button.disabled = isSubmitting || overLimit;
+    }
+    prompt.addEventListener("input", updateWordCount);
+    window.addEventListener("pageshow", updateWordCount);
+    updateWordCount();
     const result = document.getElementById("search-result");
     const products = document.getElementById("search-products");
     const currency = new Intl.NumberFormat("id-ID");
@@ -66,8 +85,11 @@
 
     form.addEventListener("submit", async event => {
         event.preventDefault();
-        if (button.disabled) return;
-        button.disabled = true;
+        if (isSubmitting) return;
+        updateWordCount();
+        if (!form.reportValidity()) return;
+        isSubmitting = true;
+        updateWordCount();
         result.hidden = true;
         status.textContent = "Menunggu pencarian diproses…";
         try {
@@ -92,6 +114,9 @@
         } catch (error) {
             status.textContent = error.name === "TimeoutError" ? "Koneksi terlalu lama. Silakan coba lagi." :
                 (error instanceof TypeError ? "Koneksi terputus. Silakan coba lagi." : error.message);
-        } finally { button.disabled = false; }
+        } finally {
+            isSubmitting = false;
+            updateWordCount();
+        }
     });
 })();
