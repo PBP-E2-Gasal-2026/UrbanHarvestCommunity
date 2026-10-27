@@ -3,7 +3,7 @@
 ## Cakupan
 
 Pencarian bahasa natural untuk pengguna login, memakai OpenRouter
-`google/gemma-3-27b-it`. LLM mengembalikan filter; backend melakukan SELECT ke
+`google/gemma-3-27b-it:free`. LLM mengembalikan filter; backend melakukan SELECT ke
 produk/category marketplace. Hanya kandidat hasil database yang boleh menjadi
 suggestion. Penjelasan dibentuk dari fakta produk dan alasan terstruktur tervalidasi.
 Kartu memakai `/marketplace/products/<id>/`, ID angka, sementara tanpa nama merchant.
@@ -49,7 +49,10 @@ admission dan menunggu pekerjaan thread selesai; beri grace period setidaknya
 | `LLM_MAX_ACTIVE_JOBS` | 3 | Job pending/processing maksimum per akun |
 | `LLM_LEASE_SECONDS` | 180 | Minimum 180 detik, token/expiry memagari finalisasi |
 
-Prompt maksimum 2.000 karakter, hasil default 20 dan maksimum 50. Timeout OpenRouter
+Prompt maksimum 500 kata (dipisahkan whitespace) dan 5.000 karakter termasuk spasi,
+dengan penghitung kata langsung pada textarea dan pesan ketika batas karakter terlampaui.
+Input di atas batas harus dikurangi sebelum dikirim; backend juga memvalidasi batas ini.
+Batas ukuran request JSON tetap 12.000 byte. Hasil default 20 dan maksimum 50. Timeout OpenRouter
 5 detik connect dan 30 detik read; body dibatasi 64 KiB dan waktu pembacaan diperiksa
 setiap chunk. Setiap panggilan provider juga dibungkus proses terpisah dengan batas
 waktu total 35 detik, lalu dihentikan dan di-reap jika macet, termasuk respons yang
