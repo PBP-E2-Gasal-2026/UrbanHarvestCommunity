@@ -70,7 +70,7 @@ class OpenRouterTests(SimpleTestCase):
         args, kwargs = transport.call_args
         self.assertEqual(args[0], "https://openrouter.ai/api/v1/chat/completions")
         self.assertEqual(kwargs["timeout"], (5, 30))
-        self.assertEqual(kwargs["json"]["model"], "google/gemma-3-27b-it")
+        self.assertEqual(kwargs["json"]["model"], "google/gemma-3-27b-it:free")
         self.assertEqual(kwargs["headers"]["Authorization"], "Bearer private-key")
         self.assertNotIn("private-key", json.dumps(kwargs["json"]))
         self.assertEqual(kwargs["json"]["response_format"]["type"], "json_schema")
