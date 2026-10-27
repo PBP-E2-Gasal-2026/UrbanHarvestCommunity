@@ -108,9 +108,32 @@ class FiltersTests(SimpleTestCase):
 
     def test_prompt_bounds_and_controls(self):
         self.assertEqual(validate_prompt("  cari tomat  "), "cari tomat")
-        for value in (None, [], " ", "x" * 2001, "tomat\x00"):
+        for value in (None, [], " ", "tomat " * 501, "tomat\x00"):
             with self.subTest(value=str(value)[:30]), self.assertRaises(InvalidSearch):
                 validate_prompt(value)
+
+    def test_prompt_accepts_500_words_with_mixed_whitespace(self):
+        prompt = " \n" + "tomat\tsegar\n" * 250 + " "
+        self.assertEqual(validate_prompt(prompt), prompt.strip())
+
+    def test_prompt_limit_counts_words_instead_of_characters(self):
+        prompt = "sayuran" * 300
+        self.assertEqual(validate_prompt(prompt), prompt)
+
+    def test_prompt_rejects_501_words(self):
+        with self.assertRaisesRegex(InvalidSearch, "500 kata"):
+            validate_prompt("tomat " * 501)
+
+    def test_prompt_character_limit_includes_whitespace(self):
+        for prompt in ("x" * 5000, "🥕" * 5000):
+            with self.subTest(prompt=prompt[:10]):
+                self.assertEqual(validate_prompt(prompt), prompt)
+        for prompt in ("x" * 5001, "🥕" * 5001, "tomat" + " " * 4996):
+            with (
+                self.subTest(prompt=prompt[:10]),
+                self.assertRaisesRegex(InvalidSearch, "5.000 karakter"),
+            ):
+                validate_prompt(prompt)
 
     def test_valid_filters_and_defaults(self):
         result = parse_filters({"keyword": "tomat", "max_price": 30000})

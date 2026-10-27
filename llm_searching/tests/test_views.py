@@ -69,6 +69,19 @@ class ViewsTests(TestCase):
         self.assertNotIn("prompt", body)
         self.assertNotIn("lease_token", body)
 
+    def test_word_limit_is_enforced_before_creating_a_job(self):
+        response = self.post("tomat " * 501)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("500 kata", response.json()["message"])
+        self.assertEqual(SearchJob.objects.count(), 0)
+
+        prompt = "tomat segar\n" * 250
+        response = self.post(prompt)
+        self.assertEqual(response.status_code, 202)
+        job = SearchJob.objects.get(pk=response.json()["id"])
+        self.assertEqual(job.prompt, prompt.strip())
+        job.full_clean(exclude=["result"])
+
     def test_csrf_and_malformed_payloads(self):
         strict = Client(enforce_csrf_checks=True)
         self.login_client(strict)
@@ -92,10 +105,24 @@ class ViewsTests(TestCase):
                     400,
                 )
 
+    def test_character_limit_is_enforced_before_creating_a_job(self):
+        response = self.post("x" * 5001)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("5.000 karakter", response.json()["message"])
+        self.assertEqual(SearchJob.objects.count(), 0)
+
+        prompt = "x" * 5000
+        response = self.post(prompt)
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(SearchJob.objects.get(pk=response.json()["id"]).prompt, prompt)
+
     def test_page_and_card_escape_product_text(self):
         response = self.client.get("/llm-search/")
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'maxlength="2000"')
+        self.assertContains(response, "0/500 kata")
+        self.assertContains(
+            response, 'aria-describedby="search-prompt-limit search-word-count"'
+        )
         self.assertContains(response, "csrfmiddlewaretoken")
         from django.template.loader import render_to_string
 
