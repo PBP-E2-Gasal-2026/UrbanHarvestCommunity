@@ -954,6 +954,17 @@ LLM_RUN_LIVE_TESTS=1 python manage.py test llm_searching.tests.test_live_prompts
 
 Runbook, kontrak adapter, serta detail operasional tersedia di [docs/llm-search.md](docs/llm-search.md). Desain, plan, dan bukti pengerjaan tersimpan di [docs/superpowers](docs/superpowers/).
 
+## AI Disclosure
+Saya menggunakan llm untuk membatu saya dalam membatu saya menulis code dan membentuk prompt engineering dalam mengirimkan request ke llm pencarian. tujuan prompt engineeringnya adalam memastikan bahwa LLM yang digunakan tidak menjawab sesuatu yang berada di luar context marketplace searching. 
+
+Sebelum llm mulai menulis code, saya membuatkan dokumen spec dan juga execution plan sehingga llm tidak bekerja dengan contract yang mengada-ada. AI yang menulis code ini juga melakukan pengerjaan dengan flow tdd dengan evidence red commit, green commit, dan refactor commit. 
+
+perbaikan manual dilakukan untuk bagian design searching page yang designnya terlalu generic dan sulit dibaca, serta ux dan interaksi dengan pengguna yang sangat minim.
+
+Seperti saat assignment, AI memang sangat membantu dalam pengerjaan backend, tetapi masih perlu perbaikan manual dalam pengerjaan UI. 
+
+Model yang digunakan: GPT-6.1-Sol (medium)
+
 ---
 
 ## 2. Khairani Hanifah Putri — 2506587371
