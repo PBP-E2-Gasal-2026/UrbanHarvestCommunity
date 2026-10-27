@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ location.name }} · Peta Kebun{% endblock %}
+
+{% block meta %}{% include 'map_module/_leaflet_css.html' %}<link rel="stylesheet" href="{% static 'css/map.css' %}">{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-5xl px-4 pt-28 pb-12 sm:px-6 lg:px-8">
+    <nav aria-label="Navigasi" class="mb-4 text-sm">
+        <a href="{% url 'map_module:map' %}" class="link">← Kembali ke peta</a>
+    </nav>
+
+    {% include 'map_module/_messages.html' %}
+
+    <div class="grid gap-6 lg:grid-cols-2">
+        <article class="space-y-4">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="badge {% if data.badge_tone == 'warning' %}badge-warning{% else %}badge-brand{% endif %}">{{ data.kind_short }}</span>
+                {% if not location.is_active %}<span class="badge badge-warning">Disembunyikan dari peta</span>{% endif %}
+            </div>
+
+            <h1 class="font-display text-3xl font-semibold text-white">{{ location.name }}</h1>
+
+            {% if data.photo_url %}
+                <img src="{{ data.photo_url }}" alt="Foto {{ location.name }}" class="max-h-64 w-full rounded-2xl border border-line object-cover" loading="lazy">
+            {% endif %}
+
+            {% if data.description %}<p class="text-body">{{ data.description }}</p>{% endif %}
+
+            {# Hanya memakai `data` (sudah disaring hak akses), jangan field `location` mentah. #}
+            <dl class="card space-y-3 p-4 text-sm">
+                {% if data.managed_by %}
+                    <div>
+                        <dt class="text-muted">Pemilik / komunitas</dt>
+                        <dd class="text-white">{{ data.managed_by }}</dd>
+                    </div>
+                {% endif %}
+                {% if data.commodities %}
+                    <div>
+                        <dt class="text-muted">Komoditas tersedia</dt>
+                        <dd class="text-white">{{ data.commodities }}</dd>
+                    </div>
+                {% endif %}
+                {% if data.schedule %}
+                    <div>
+                        <dt class="text-muted">Jadwal</dt>
+                        <dd class="text-white">{{ data.schedule }}</dd>
+                    </div>
+                {% endif %}
+                <div>
+                    <dt class="text-muted">Wilayah</dt>
+                    <dd class="text-white">{{ data.area|default:'Belum diisi' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-muted">Koordinat</dt>
+                    <dd class="text-white">{{ data.lat|stringformat:'f' }}, {{ data.lng|stringformat:'f' }}</dd>
+                </div>
+                {% if data.detail_locked %}
+                    <div>
+                        <dt class="text-muted">Alamat lengkap &amp; kontak</dt>
+                        <dd class="text-white">
+                            {% if data.detail_login_required %}
+                                <a class="link" href="{% url 'authentication:login' %}?next={{ request.path|urlencode }}">Masuk untuk melihat alamat lengkap &amp; kontak</a>
+                            {% else %}
+                                Hanya ditampilkan untuk pemilik.
+                            {% endif %}
+                        </dd>
+                    </div>
+                {% else %}
+                    <div>
+                        <dt class="text-muted">Alamat lengkap</dt>
+                        <dd class="text-white">{{ data.address|default:'Belum diisi' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-muted">Kontak</dt>
+                        <dd class="text-white">{{ data.contact|default:'Belum diisi' }}</dd>
+                    </div>
+                {% endif %}
+            </dl>
+
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ location.get_map_url }}" class="btn btn-brand btn-sm">Lihat di peta penuh</a>
+                {% if data.store_url %}<a href="{{ data.store_url }}" class="btn btn-secondary btn-sm">Lihat etalase</a>{% endif %}
+                <a href="https://www.openstreetmap.org/?mlat={{ data.lat|stringformat:'f' }}&amp;mlon={{ data.lng|stringformat:'f' }}#map=17/{{ data.lat|stringformat:'f' }}/{{ data.lng|stringformat:'f' }}"
+                   class="btn btn-ghost btn-sm" target="_blank" rel="noopener noreferrer">Buka di OpenStreetMap</a>
+            </div>
+
+            {% if can_edit %}
+                <div class="flex flex-wrap gap-2 border-t border-line pt-4">
+                    <a href="{% url 'map_module:location_update' location.pk %}" class="btn btn-secondary btn-sm">Ubah</a>
+                    <form method="post" action="{% url 'map_module:location_delete' location.pk %}"
+                          onsubmit="return confirm('Hapus lokasi ini? Tindakan ini tidak dapat dibatalkan.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                    </form>
+                </div>
+            {% endif %}
+        </article>
+
+        <div class="map-shell relative isolate overflow-hidden rounded-2xl border border-line bg-surface">
+            <div id="point-map" class="h-80 w-full lg:h-full lg:min-h-96" role="region"
+                 aria-label="Peta posisi {{ location.name }}"
+                 data-lat="{{ data.lat|stringformat:'f' }}" data-lng="{{ data.lng|stringformat:'f' }}" data-name="{{ location.name }}"></div>
+            <p id="point-map-fallback" class="absolute inset-0 z-10 flex items-center justify-center bg-surface p-6 text-center text-sm text-muted" hidden>
+                Peta tidak dapat dimuat saat ini. Koordinat lokasi tertera di samping.
+            </p>
+        </div>
+    </div>
+</section>
+{% include 'map_module/_point_marker.html' %}
+{% endblock %}
+
+{% block extra_js %}
+{% include 'map_module/_leaflet_js.html' %}
+<script src="{% static 'js/map-point.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Peta Kebun · Urban Harvest Community{% endblock %}
+
+{% block meta %}
+{% include 'map_module/_leaflet_css.html' %}
+<link rel="stylesheet" href="{% static 'css/map.css' %}">
+{% endblock %}
+
+{% block content %}
+{# Tata letak mengikuti draf Figma "peta-kebun-desktop" (halaman "Draf SVG (v0.1)"). #}
+<section class="mx-auto max-w-[1440px] px-4 pt-24 pb-12 sm:px-6 lg:px-12">
+    {% comment %}
+        Grid 3 bagian. Desktop: A & C di kolom kiri, B (peta) di kanan selebar 2 baris.
+        Ponsel: urutan DOM A -> B -> C (judul & filter, peta, daftar).
+    {% endcomment %}
+    <div class="grid gap-x-8 gap-y-6 lg:grid-cols-[420px_1fr] lg:grid-rows-[auto_1fr]">
+
+        {# ------------------------------------------------- A: judul & filter #}
+        <div class="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
+            <header class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h1 class="font-display text-4xl text-white">Peta Kebun</h1>
+                    <p class="mt-2 text-sm text-muted">Temukan kebun komunitas dan titik ambil panen.</p>
+                </div>
+                {% if can_manage %}
+                    <div class="flex gap-2">
+                        <a href="{% url 'map_module:my_locations' %}" class="btn btn-ghost btn-sm">Lokasi saya</a>
+                        <a href="{% url 'map_module:location_create' %}" class="btn btn-secondary btn-sm">Tambah lokasi</a>
+                    </div>
+                {% endif %}
+            </header>
+
+            {% include 'map_module/_messages.html' %}
+
+            <form id="filter-form" method="get" action="{% url 'map_module:map' %}" class="flex flex-col gap-3" role="search">
+                <div class="relative">
+                    <label for="q" class="sr-only">Cari kebun atau daerah</label>
+                    <svg class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input id="q" name="q" type="search" value="{{ query }}" maxlength="100" autocomplete="off"
+                           placeholder="Cari kebun, daerah, atau komoditas"
+                           class="input rounded-pill py-3.5 pl-12">
+                </div>
+
+                <button type="button" id="near-me" class="btn btn-brand w-full" hidden>
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+                    Tampilkan yang dekat saya
+                </button>
+                <div id="near-active" class="flex items-center gap-2" hidden>
+                    <div class="field flex-1">
+                        <label for="radius" class="sr-only">Radius dari posisi Anda</label>
+                        <select id="radius" class="rounded-pill py-2.5 text-sm">
+                            <option value="">Semua jarak</option>
+                            {% for km in radius_choices %}<option value="{{ km }}">Dalam {{ km }} km</option>{% endfor %}
+                        </select>
+                    </div>
+                    <button type="button" id="near-reset" class="btn btn-secondary btn-sm">Urutan biasa</button>
+                </div>
+
+                <div class="flex flex-wrap gap-2" role="group" aria-label="Filter jenis lokasi">
+                    <button type="button" class="chip" data-kind-all aria-pressed="{% if active_kinds %}false{% else %}true{% endif %}">Semua</button>
+                    {% for value, label in kind_choices %}
+                        <button type="button" class="chip gap-2" data-kind="{{ value }}" title="{{ label }}"
+                                aria-pressed="{% if value in active_kinds %}true{% else %}false{% endif %}">
+                            {% if value == 'community_garden' %}<span class="size-2.5 rounded-pill bg-brand" aria-hidden="true"></span>Komunitas
+                            {% elif value == 'farmer_garden' %}<span class="size-2.5 rounded-pill bg-brand-soft" aria-hidden="true"></span>Kebun petani
+                            {% elif value == 'merchant' %}<span class="size-2.5 rounded-pill bg-white" aria-hidden="true"></span>Merchant
+                            {% else %}<span class="size-2.5 rounded-pill bg-pin-pickup" aria-hidden="true"></span>Titik ambil{% endif %}
+                        </button>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm no-js-only">Cari</button>
+            </form>
+
+            <p id="map-status" role="status" aria-live="polite" class="text-sm text-muted empty:hidden"></p>
+        </div>
+
+        {# ------------------------------------------------------------ B: peta #}
+        <div class="map-shell relative isolate h-[55vh] min-h-[340px] overflow-hidden rounded-3xl border border-line bg-surface lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:h-[calc(100vh-8rem)] lg:min-h-[560px] lg:self-start">
+            <div id="map" class="size-full" role="region" aria-label="Peta lokasi kebun"></div>
+
+            <ul class="pointer-events-none absolute right-4 bottom-8 left-4 z-[500] w-fit flex flex-wrap gap-x-5 gap-y-1 rounded-pill border border-line bg-surface/90 px-5 py-2.5 text-xs text-body" aria-label="Legenda">
+                <li class="flex items-center gap-2"><span class="size-3 rounded-pill bg-brand" aria-hidden="true"></span>Komunitas</li>
+                <li class="flex items-center gap-2"><span class="size-3 rounded-pill bg-brand-soft" aria-hidden="true"></span>Kebun petani</li>
+                <li class="flex items-center gap-2"><span class="size-3 rounded-pill bg-white" aria-hidden="true"></span>Merchant</li>
+                <li class="flex items-center gap-2"><span class="size-3 rounded-pill bg-pin-pickup" aria-hidden="true"></span>Titik ambil</li>
+            </ul>
+
+            <p id="map-fallback" class="absolute inset-0 z-[600] flex items-center justify-center bg-surface p-6 text-center text-sm text-muted" hidden>
+                Peta tidak dapat dimuat saat ini. Daftar lokasi di samping tetap bisa dipakai.
+            </p>
+        </div>
+        {# ---------------------------------------------------------- C: daftar #}
+        <div class="flex min-w-0 flex-col gap-3 lg:col-start-1 lg:row-start-2">
+            <p class="text-xs text-muted empty:hidden" id="result-count" aria-live="polite"></p>
+
+            <ul id="location-list" class="space-y-3" aria-label="Daftar lokasi"></ul>
+
+            <div id="empty-state" class="card p-6 text-center" hidden>
+                <p class="font-semibold text-white">Belum ada lokasi yang cocok</p>
+                <p class="mt-1 text-sm text-muted" id="empty-hint">Coba ubah kata kunci atau pilih "Semua".</p>
+                {% if can_manage %}
+                    <a href="{% url 'map_module:location_create' %}" class="btn btn-brand btn-sm mt-4">Tambah lokasi</a>
+                {% endif %}
+            </div>
+
+            {% if truncated %}
+                <p class="text-xs text-warning">Menampilkan {{ locations|length }} lokasi pertama. Persempit pencarian untuk hasil lain.</p>
+            {% endif %}
+
+            <noscript>
+                <ul class="space-y-2">
+                    {% for loc in locations %}
+                        <li class="card"><a class="link" href="{{ loc.detail_url }}">{{ loc.name }}</a>
+                            <span class="text-xs text-muted">· {{ loc.kind_short }}{% if loc.area %} · {{ loc.area }}{% endif %}{% if loc.commodities %} · {{ loc.commodities }}{% endif %}</span></li>
+                    {% empty %}
+                        <li class="text-sm text-muted">Belum ada lokasi.</li>
+                    {% endfor %}
+                </ul>
+            </noscript>
+        </div>
+
+    </div>
+</section>
+
+{# ---- Cetakan elemen yang dibuat JS. Ditaruh di template agar class Tailwind-nya ikut ter-scan. ---- #}
+<template id="tpl-card">
+    {# Komponen Figma "Card / Location": foto, nama, badge, komoditas/jadwal, jarak. #}
+    <li class="card flex cursor-pointer gap-4 transition hover:border-glass-border" data-card>
+        <div class="flex size-26 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-image-placeholder">
+            <svg class="size-10 text-brand-tint" data-placeholder viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18 9 11l4 5 3-3 5 5z"/><circle cx="16" cy="7" r="2"/></svg>
+            <img data-img="photo_url" alt="" class="size-full object-cover" loading="lazy" hidden>
+        </div>
+        <div class="flex min-w-0 flex-1 flex-col items-start justify-center gap-1.5">
+            <h3 class="text-base leading-tight font-semibold text-white">
+                <button type="button" class="text-left hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" data-action="focus" data-text="name"></button>
+            </h3>
+            <span class="badge" data-badge data-text="kind_short"></span>
+            <p class="line-clamp-1 text-sm text-muted" data-text="card_line" hidden></p>
+            <p class="text-xs font-medium text-brand-soft" data-text="distance_label" data-suffix=" dari kamu" hidden></p>
+        </div>
+    </li>
+</template>
+
+<template id="tpl-popup">
+    <div class="w-72 space-y-2 rounded-2xl border border-line bg-surface p-4 text-white shadow-2xl">
+        <img data-img="photo_url" alt="" class="h-28 w-full rounded-xl object-cover" loading="lazy" hidden>
+        <p class="text-sm leading-snug font-semibold" data-text="name"></p>
+        <span class="badge" data-badge data-text="kind_short"></span>
+        <p class="text-xs text-muted" data-text="managed_by" data-prefix="Dikelola: " hidden></p>
+        <p class="text-xs text-body" data-text="address" hidden></p>
+        <p class="text-xs text-muted" data-text="area" hidden></p>
+        <p class="text-xs text-muted" data-text="commodities" data-prefix="Komoditas: " hidden></p>
+        <p class="text-xs text-muted" data-text="schedule" data-prefix="Jadwal: " hidden></p>
+        <p class="text-xs text-muted" data-text="description" hidden></p>
+        <p class="text-xs text-body" data-show-if="contact">Kontak: <span data-text="contact"></span></p>
+        <p class="text-xs text-muted" data-show-if="detail_login_required">Kontak &amp; alamat: <a class="link" data-login-link>masuk untuk melihat</a></p>
+        <p class="text-xs text-muted" data-show-if="detail_owner_only">Kontak &amp; alamat hanya untuk pemilik.</p>
+        <div class="flex items-center justify-between gap-3 pt-2">
+            <span class="text-sm font-semibold text-brand-soft" data-text="distance_label"></span>
+            <a class="btn btn-primary btn-sm" data-link="primary_url" data-text="primary_label"></a>
+        </div>
+        <a class="link block text-xs" data-link="secondary_url">Detail lokasi</a>
+    </div>
+</template>
+
+<template id="tpl-product-popup">
+    <div class="w-72 space-y-2 rounded-2xl border border-line bg-surface p-4 text-white shadow-2xl">
+        <span class="badge badge-warning">Titik pengambilan produk</span>
+        <p class="text-sm leading-snug font-semibold" data-text="name"></p>
+        <p class="text-xs text-body" data-text="address" hidden></p>
+        <p class="text-xs text-muted" data-text="area" hidden></p>
+        <div class="flex justify-end pt-2"><a class="btn btn-primary btn-sm" data-link="detail_url" hidden>Lihat produk</a></div>
+    </div>
+</template>
+
+{# Marker berbentuk pin seperti di draf. Kelas saat terpilih: data-selected-class. #}
+<template id="tpl-pin" data-selected-class="scale-125"><span class="block origin-bottom drop-shadow-lg transition-transform duration-150" data-pin>
+    <svg width="28" height="36" viewBox="0 0 28 36" aria-hidden="true"><path data-pin-body stroke-width="2" d="M14 1C7 1 1.5 6.4 1.5 13.3 1.5 22.5 14 35 14 35s12.5-12.5 12.5-21.7C26.5 6.4 21 1 14 1z"/><circle data-pin-dot cx="14" cy="13" r="4.5"/></svg>
+</span></template>
+<template data-pin-colors="community_garden" data-body="fill-brand stroke-canvas" data-dot="fill-white"></template>
+<template data-pin-colors="farmer_garden" data-body="fill-brand-soft stroke-canvas" data-dot="fill-canvas"></template>
+<template data-pin-colors="merchant" data-body="fill-white stroke-canvas" data-dot="fill-brand"></template>
+<template data-pin-colors="pickup_point" data-body="fill-pin-pickup stroke-canvas" data-dot="fill-white"></template>
+<template data-pin-colors="product" data-body="fill-pin-pickup stroke-white" data-dot="fill-canvas"></template>
+<template id="tpl-user-marker"><span class="block size-4 rounded-pill border-2 border-white bg-focus shadow-lg"></span></template>
+
+{{ locations|json_script:'map-initial' }}
+{{ config|json_script:'map-config' }}
+{% endblock %}
+
+{% block extra_js %}
+{% include 'map_module/_leaflet_js.html' %}
+<script src="{% static 'js/map.js' %}" defer></script>
+{% endblock %}

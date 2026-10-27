@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Lokasi saya · Peta Kebun{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl px-4 pt-28 pb-12 sm:px-6 lg:px-8">
+    <nav aria-label="Navigasi" class="mb-4 text-sm">
+        <a href="{% url 'map_module:map' %}" class="link">← Kembali ke peta</a>
+    </nav>
+
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h1 class="font-display text-3xl font-semibold text-white">Lokasi saya</h1>
+            <p class="mt-2 text-sm text-muted">Kelola kebun, merchant, dan titik pengambilan yang Anda daftarkan.</p>
+        </div>
+        <a href="{% url 'map_module:location_create' %}" class="btn btn-primary btn-sm">Tambah lokasi</a>
+    </header>
+
+    {% include 'map_module/_messages.html' %}
+
+    {% if locations %}
+        <ul class="space-y-3">
+            {% for loc in locations %}
+                <li class="card flex flex-wrap items-center justify-between gap-3 p-4">
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="badge badge-brand">{{ loc.get_kind_display }}</span>
+                            {% if not loc.is_active %}<span class="badge badge-warning">Disembunyikan</span>{% endif %}
+                        </div>
+                        <p class="mt-1 font-semibold text-white">{{ loc.name }}</p>
+                        <p class="text-xs text-muted">{{ loc.area|default:'Wilayah belum diisi' }}{% if loc.manager_name %} · {{ loc.manager_name }}{% endif %} · {{ loc.get_detail_visibility_display }}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ loc.get_absolute_url }}" class="btn btn-ghost btn-sm">Lihat</a>
+                        <a href="{% url 'map_module:location_update' loc.pk %}" class="btn btn-secondary btn-sm">Ubah</a>
+                        <form method="post" action="{% url 'map_module:location_delete' loc.pk %}"
+                              onsubmit="return confirm('Hapus lokasi ini? Tindakan ini tidak dapat dibatalkan.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="card p-8 text-center">
+            <p class="font-semibold text-white">Belum ada lokasi</p>
+            <p class="mt-1 text-sm text-muted">Tambahkan kebun atau titik pengambilan pertama Anda agar muncul di peta.</p>
+            <a href="{% url 'map_module:location_create' %}" class="btn btn-brand btn-sm mt-4">Tambah lokasi</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
