@@ -88,13 +88,14 @@ def profile_view(request, username) :
         'profile': profile,
         'merchant': merchant,
         'is_owner': request.user == profile_user,
+        'is_seller': has_role(profile_user, 'farmer-seller'),
     })
 
 @login_required
 def profile_edit_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
-        form = ProfileForm(request.POST, instance=profile)
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
             return redirect('authentication:profile', username=request.user.username)

@@ -5,18 +5,30 @@ from django.core.exceptions import ValidationError
 
 from .models import Profile, User, SellerApplication, Merchant
 
+MAX_PHOTO_SIZE = 2 * 1024 * 1024
+
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['bio', 'location', 'community']
+        fields = ['photo','bio', 'location', 'community']
         labels = {
+            'photo': 'Foto profil',
             'bio': 'Bio',
             'location': 'Lokasi',
             'community': 'Komunitas',
         }
+        help_texts = {
+            'photo': 'Foto berupa gambar, maksimal 2 MB.',
+        }
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4}),
         }
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo and photo.size > MAX_PHOTO_SIZE:
+            raise forms.ValidationError('Ukuran foto maksimal 2 MB')
+        return photo
 
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=100, label='Username')
@@ -50,6 +62,8 @@ class RegistrationForm(forms.Form):
 
     def clean_username(self):
         username = self.cleaned_data['username'].strip()
+        if username.lower() in {'edit'}:
+            raise forms.ValidationError('Username ini tidak dapat digunakan.')
         if User.objects.filter(username__iexact=username).exists():
             raise forms.ValidationError('Username sudah digunakan.')
         return username
@@ -96,4 +110,6 @@ class MerchantForm(forms.ModelForm):
         }
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
+            'show_location': forms.CheckboxInput(attrs={'class': 'control'}),
+            'show_contact': forms.CheckboxInput(attrs={'class': 'control'}),
         }

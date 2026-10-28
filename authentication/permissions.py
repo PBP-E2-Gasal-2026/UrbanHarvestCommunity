@@ -32,3 +32,20 @@ def role_required(*roles):
 
 
 admin_required = _guard(is_admin)
+
+MEMBER_ROLES = ('farmer', 'farmer-seller', 'admin')
+SELLER_ROLES = ('farmer-seller', 'admin')
+
+
+def is_member(user):
+    """Boleh post, like, komentar, pakai LLM search (Petani, Penjual, Admin)."""
+    return is_admin(user) or has_role(user, *MEMBER_ROLES)
+
+
+def is_seller(user):
+    """Boleh kelola produk dan etalase (Penjual dan Admin)."""
+    return is_admin(user) or has_role(user, *SELLER_ROLES)
+
+
+member_required = _guard(is_member)
+seller_required = _guard(is_seller)
