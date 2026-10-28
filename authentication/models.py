@@ -97,6 +97,7 @@ class Session(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    photo = models.ImageField(upload_to='profiles/', blank=True)
     bio = models.TextField(blank=True)
     location = models.CharField(max_length=150, blank=True)
     community = models.CharField(max_length=150, blank=True)

@@ -151,6 +151,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 WHITENOISE_USE_FINDERS = True
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Django 5 uses EMAIL_BACKEND; MAILERS is a Django 6 setting.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -162,3 +165,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authentication.User'
 
 LOGIN_URL = 'authentication:login'
+
