@@ -2,58 +2,151 @@
 
 @source "../../templates";
 
+/*
+ * Urban Harvest Community — Design System v1
+ * Sumber kebenaran: Figma (page Foundations & Components).
+ * Nama token di bawah SAMA PERSIS dengan nama Figma Variables,
+ * jadi `brand` di Figma = `--color-brand` di sini = class `bg-brand` / `text-brand`.
+ * Jangan menulis hex langsung di template (mis. bg-[#080c09]); tambahkan token di sini.
+ */
+@theme {
+  /* Tipografi */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
+
+  /* Latar */
+  --color-canvas: #080c09;
+  --color-surface: #0a0a0a;
+  --color-surface-2: #171717;
+  --color-image-placeholder: #14261c;
+  --color-line: #262626;
+
+  /* Brand */
+  --color-brand: #059669;
+  --color-brand-hover: #10b981;
+  --color-brand-soft: #6ee7b7;
+  --color-brand-tint: rgb(5 150 105 / 0.2);
+
+  /* Teks */
+  --color-white: #ffffff;
+  --color-white-hover: #f1f5f9;
+  --color-ink: #0a0a0a;
+  --color-body: #d4d4d4;
+  --color-muted: #a3a3a3;
+  --color-disabled: #525252;
+  --color-label: #d1fae5;
+
+  /* Kaca (input, tombol secondary) */
+  --color-glass: rgb(255 255 255 / 0.08);
+  --color-glass-hover: rgb(255 255 255 / 0.16);
+  --color-glass-border: rgb(255 255 255 / 0.25);
+  --color-focus: #34d399;
+
+  /* Status */
+  --color-danger: #fda4af;
+  --color-danger-border: #fb7185;
+  --color-danger-tint: rgb(244 63 94 / 0.2);
+  --color-warning: #fcd34d;
+  --color-warning-tint: rgb(245 158 11 / 0.2);
+  --color-pin-pickup: #f59e0b;
+
+  /* Sudut: input = rounded-lg (8px), kartu = rounded-2xl (16px), tombol/badge/chip = rounded-pill */
+  --radius-pill: 9999px;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas font-sans text-white antialiased;
+  }
+}
+
 @layer components {
-  .register-form,
-  .login-form {
-    width: 100%;
-    max-width: 34rem;
+  /* ---------- Button (Figma: Button, Style × State) ---------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-pill border border-transparent px-6 py-3 text-sm leading-5 font-semibold transition-all active:scale-95;
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus;
+    @apply disabled:pointer-events-none disabled:border-transparent disabled:bg-surface-2 disabled:text-disabled;
+  }
+  .btn-sm {
+    @apply px-4 py-2 text-xs;
+  }
+  .btn-primary {
+    @apply bg-white text-ink hover:bg-white-hover;
+  }
+  .btn-brand {
+    @apply bg-brand text-white hover:bg-brand-hover;
+  }
+  .btn-secondary {
+    @apply border-glass-border bg-glass text-white hover:bg-glass-hover;
+  }
+  .btn-danger {
+    @apply bg-danger-tint text-danger hover:border-danger-border;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-brand-soft hover:bg-glass;
   }
 
-  .register-field label,
-  .login-field label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #d1fae5;
-    font-size: 0.875rem;
-    font-weight: 600;
+  /* ---------- Input (Figma: Input, Default / Focus / Error) ---------- */
+  .field {
+    @apply flex flex-col gap-2;
+  }
+  .field > label,
+  .label {
+    @apply text-sm leading-5 font-semibold text-label;
+  }
+  .input,
+  .field :where(input:not([type="checkbox"], [type="radio"]), select, textarea) {
+    @apply block w-full rounded-lg border border-glass-border bg-glass px-4 py-3 text-sm text-white transition placeholder:text-muted;
+    @apply focus:border-focus focus:ring-1 focus:ring-focus focus:outline-none;
+  }
+  .input-error,
+  .field :where([aria-invalid="true"]),
+  .field-has-error :where(input, select, textarea) {
+    @apply border-danger-border;
+  }
+  .field-error {
+    @apply text-xs text-danger;
+  }
+  .field-help {
+    @apply text-xs text-muted;
   }
 
-  .register-field input,
-  .login-field input {
-    display: block;
-    width: 100%;
-    min-height: 2.75rem;
-    padding: 0.625rem 0.875rem;
-    border: 1px solid rgb(255 255 255 / 0.25);
-    border-radius: 0.5rem;
-    background: rgb(255 255 255 / 0.08);
-    color: white;
+  /* ---------- Badge (Figma: Badge, Tone) ---------- */
+  .badge {
+    @apply inline-flex items-center rounded-pill border border-transparent px-3 py-1 text-xs font-semibold;
+  }
+  .badge-brand {
+    @apply bg-brand-tint text-brand-soft;
+  }
+  .badge-warning {
+    @apply bg-warning-tint text-warning;
+  }
+  .badge-danger {
+    @apply bg-danger-tint text-danger;
+  }
+  .badge-neutral {
+    @apply border-glass-border bg-glass text-body;
   }
 
-  .register-field input:focus-visible,
-  .login-field input:focus-visible {
-    outline: 2px solid #34d399;
-    outline-offset: 2px;
+  /* ---------- Chip (Figma: Chip, Active / Inactive) ---------- */
+  .chip {
+    @apply inline-flex items-center rounded-pill border border-glass-border bg-glass px-4 py-2 text-sm font-semibold text-body transition hover:bg-glass-hover;
+  }
+  .chip-active,
+  .chip[aria-pressed="true"] {
+    @apply border-transparent bg-white text-ink hover:bg-white-hover;
   }
 
-  .auth-link {
-    color: #6ee7b7;
-    font-weight: 600;
+  /* ---------- Card (Figma: Card / Location, Card / Product) ---------- */
+  .card {
+    @apply rounded-2xl border border-line bg-surface p-3;
+  }
+  .card-selected {
+    @apply border-brand;
   }
 
-  .auth-link:hover {
-    color: #a7f3d0;
-    text-decoration: underline;
-  }
-
-  @media (max-width: 640px) {
-    .register-page {
-      padding-top: 7rem;
-    }
-
-    .register-form,
-    .login-form {
-      max-width: 100%;
-    }
+  /* ---------- Link ---------- */
+  .link {
+    @apply font-semibold text-brand-soft hover:underline;
   }
 }

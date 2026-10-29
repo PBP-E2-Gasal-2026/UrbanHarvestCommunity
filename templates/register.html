@@ -3,19 +3,29 @@
 {% block title %}Daftar | Urban Harvest Community{% endblock %}
 
 {% block content %}
-<section class="register-page flex flex-col justify-center items-center mx-auto min-h-screen px-4 pt-40 pb-16">
-  <h1 class="mb-6 text-3xl font-bold">Daftar</h1>
-  <form method="post" class="register-form space-y-4">
-    {% csrf_token %}
-    {% for field in form %}
-      <div class="register-field">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% for error in field.errors %}<p class="text-rose-300" role="alert">{{ error }}</p>{% endfor %}
-      </div>
-    {% endfor %}
-    <button type="submit" class="w-full rounded-lg bg-emerald-600 px-4 py-2 mt-[16px]">Daftar</button>
-  </form>
-  <p class="mt-4">Sudah punya akun? <a class="auth-link" href="{% url 'authentication:login' %}">Masuk</a></p>
+<section class="flex min-h-screen flex-col items-center justify-center px-4 pt-32 pb-16">
+  <div class="card w-full max-w-md p-6 sm:p-8">
+    <h1 class="font-display text-4xl">Daftar</h1>
+    <p class="mt-2 text-sm text-muted">Gabung dengan petani urban di sekitarmu.</p>
+
+    <form method="post" class="mt-8 space-y-5">
+      {% csrf_token %}
+      {% for error in form.non_field_errors %}
+        <p class="rounded-lg bg-danger-tint px-4 py-3 text-sm text-danger" role="alert">{{ error }}</p>
+      {% endfor %}
+      {% for field in form %}
+        <div class="field{% if field.errors %} field-has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary w-full">Daftar</button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-body">
+      Sudah punya akun? <a class="link" href="{% url 'authentication:login' %}">Masuk</a>
+    </p>
+  </div>
 </section>
 {% endblock %}
