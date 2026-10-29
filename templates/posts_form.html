@@ -3,26 +3,37 @@
 {% block title %}Tambah Postingan | Urban Harvest Community{% endblock %}
 
 {% block content %}
-<section>
-    <h1>Tambah Postingan</h1>
-    <form method="POST">
-        {% csrf_token %}
-        {% for error in field.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-        {% for field in form %}
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
+<main class="min-h-screen bg-canvas px-4 py-10 text-white sm:px-6 lg:px-8">
+    <section class="mx-auto max-w-2xl">
+        <header class="mb-8">
+            <h1 class="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                {% if post %}Edit Postingan{% else %}Tambah Postingan{% endif %}
+            </h1>
+        </header>
+        
+        <form method="POST" class="card space-y-6 p-5 sm:p-7">
+            {% csrf_token %}
             {% for error in field.errors %}
-                <p>{{ error }}</p>
+                <p class="field-error">{{ error }}</p>
             {% endfor %}
-        {% endfor %}
-        <button type="submit">
-            {% if post %}Simpan perubahan{% else %}Tambah Postingan{% endif %}
-        </button>
-        <a href="{% url 'community_forum:show_community' %}">Batal</a>
-    </form>
-    
-</section>
+            {% for field in form %}
+                <div class="field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <div class="flex flex-wrap justify-end gap-3 border-t border-line pt-5">
+                <a href="{% url 'community_forum:show_community' %}" class="btn btn-secondary">Batal</a>
+                <button type="submit" class="btn btn-brand">
+                    {% if post %}Simpan perubahan{% else %}Tambah Postingan{% endif %}
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+
 
 {% endblock %}
