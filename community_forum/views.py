@@ -19,13 +19,13 @@ def feed(request):
         )
         .order_by("-created_at")
     )
-    return render(request, "forum.html", {"posts": posts})
+    return render(request, "feed.html", {"posts": posts})
 
 
 def show_community(request):
     posts = (Post.objects
             .select_related("creator")
-            .prefetch_related("comments__user")
+            .prefetch_related("comments__creator", "likes")
             .annotate(
                 like_count=Count("likes", distinct=True),
                 comment_count=Count("comments", distinct=True),
@@ -49,9 +49,42 @@ def create_post(request):
         post.creator = request.user
         post.save()
         messages.success(request, "Postingan baru berhasil ditambahkan!")
-        return redirect("main:show_community")
+        return redirect("community_forum:show_community")
         
     return render(request, "posts_form.html", {"form": form})
+
+
+@login_required
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, pk=post_id, creator=request.user)
+    form = PostForm(request.POST or None, instance=post)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Postingan berhasil diperbarui!")
+        return redirect("community_forum:show_community")
+
+    return render(request, "posts_form.html", {"form": form, "post": post})
+
+
+@login_required
+@require_POST
+def delete_post(request, post_id):
+    post = get_object_or_404(Post, pk=post_id, creator=request.user)
+    post.delete()
+    messages.success(request, "Postingan berhasil dihapus!")
+    return redirect("community_forum:show_community")
+
+
+@login_required
+@require_POST
+def toggle_like(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    if post.likes.filter(pk=request.user.pk).exists():
+        post.likes.remove(request.user)
+    else:
+        post.likes.add(request.user)
+    return redirect("community_forum:show_community")
 
 
 @login_required
@@ -66,10 +99,29 @@ def create_comment(request, post_id):
         comment.creator = request.user
         comment.save()
         messages.success(request, "Komentar berhasil ditambahkan!")
-    else:
-        messages.error(request, "Komentar tidak valid.")
+        return redirect("community_forum:show_community")
 
-    return redirect("main:show_community")
+    return render(request, "comments_form.html", {"form": form, "post": post})
 
 
+@login_required
+def edit_comment(request, post_id, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id, creator=request.user)
+    form = CommentForm(request.POST or None, instance=comment)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Komentar berhasil diperbarui!")
+        return redirect("community_forum:show_community")
+
+    return render(request, "comments_form.html", {"form": form, "comment": comment})
+
+    
+@login_required
+@require_POST
+def delete_comment(request, post_id, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id, creator=request.user)
+    comment.delete()
+    messages.success(request, "Komentar berhasil dihapus!")
+    return redirect("community_forum:show_community")
 

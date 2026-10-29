@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Feed | Urban Harvest Community{% endblock %}
+
+{% block content %}
+<main>
+    <section>
+        <h1>Feed</h1> <!--Masih ragu perlu/ga-->
+
+        <div>
+            {% for post in post_list %}
+                <article>
+                    <header>
+                        <h2>{{ post.creator.username }}</h2>
+                        <small title="{{ post.created_at|date:'d M Y H:i' }}">
+                            {{ post.created_at|timesince }} yang lalu
+                        </small>
+                    </header>
+                    
+                    <p>{{ post.content|linebreaksbr }}</p>
+
+                    <footer>
+                        <span>{{ post.like_count }} likes</span>
+                        <a href="{% url 'community_forum:show_community' %}#post-{{ post.id_post }}">
+                            {{ post.comment_count }} comments
+                        </a>
+                    </footer>
+                </article>
+            {% empty %}
+                <p>Belum ada postingan.</p>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}
