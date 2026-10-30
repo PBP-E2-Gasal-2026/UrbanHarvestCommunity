@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from .exceptions import InvalidSearch, QueueFull
+from .exceptions import InvalidSearch, QueueFull, RateLimited
 from .jobs import submit_job
 from .models import SearchJob
 from .openrouter import load_json
@@ -49,6 +49,17 @@ def create_job(request):
         return JsonResponse(
             {"error_code": "invalid_search", "message": message}, status=400
         )
+    except RateLimited as exc:
+        response = JsonResponse(
+            {
+                "error_code": exc.code,
+                "message": str(exc),
+                "retry_after": exc.retry_after,
+            },
+            status=429,
+        )
+        response["Retry-After"] = str(exc.retry_after)
+        return response
     except QueueFull as exc:
         return JsonResponse({"error_code": exc.code, "message": str(exc)}, status=429)
     except OperationalError:

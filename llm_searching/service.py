@@ -1,7 +1,12 @@
 """Search orchestration; only database facts become user-visible product claims."""
 
 from .exceptions import InvalidSearch, ProviderUnavailable
-from .filters import normalize_category_filters, parse_filters, validate_prompt
+from .filters import (
+    normalize_category_filters,
+    parse_filters,
+    recommendation_defaults,
+    validate_prompt,
+)
 from .marketplace import MarketplaceRepository
 from .openrouter import OpenRouterClient
 
@@ -47,6 +52,7 @@ class SearchService:
         filters = normalize_category_filters(
             parse_filters(extraction["filters"]), category_slugs
         )
+        filters = recommendation_defaults(prompt, filters)
         candidates = self.repository.search(filters)
         if not candidates:
             return {

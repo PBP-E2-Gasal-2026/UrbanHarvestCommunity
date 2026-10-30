@@ -20,3 +20,11 @@ class ProviderUnavailable(SearchError):
 
 class QueueFull(SearchError):
     code = "queue_full"
+
+
+class RateLimited(SearchError):
+    code = "rate_limited"
+
+    def __init__(self, retry_after):
+        self.retry_after = retry_after
+        super().__init__("Maksimal 5 pencarian per menit. Silakan coba lagi sebentar.")

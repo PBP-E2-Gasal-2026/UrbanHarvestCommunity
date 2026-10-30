@@ -1,3 +1,4 @@
+import re
 import unicodedata
 from dataclasses import asdict, dataclass, replace
 
@@ -47,9 +48,16 @@ def normalize_category_filters(filters: SearchFilters, category_slugs) -> Search
         keyword = ""
         categories = (category,)
     else:
-        # Keep advertised qualities as text constraints; remove only the generic
-        # category prefix. Specific names such as "buah naga" remain untouched.
-        descriptors = {"segar", "organik", "hidroponik", "lokal"}
+        # Category prefixes are not product names; preserve specific commodities.
+        descriptors = {
+            "segar",
+            "terbaik",
+            "bagus",
+            "berkualitas",
+            "organik",
+            "hidroponik",
+            "lokal",
+        }
         text = category_text(keyword)
         for label, slug in sorted(aliases.items(), key=lambda item: -len(item[0])):
             if not text.startswith(label + " "):
@@ -61,7 +69,25 @@ def normalize_category_filters(filters: SearchFilters, category_slugs) -> Search
                 keyword = remainder
                 categories = (slug,)
                 break
+    # General quality preferences must not exclude products whose descriptions
+    # simply omit those adjectives. Specific claims such as organic remain filters.
+    keyword = " ".join(
+        word
+        for word in keyword.split()
+        if word.casefold() not in {"segar", "terbaik", "bagus", "berkualitas"}
+    )
     return replace(filters, keyword=keyword, categories=categories)
+
+
+def recommendation_defaults(prompt: str, filters: SearchFilters) -> SearchFilters:
+    text = prompt.casefold()
+    if (
+        re.search(r"rekomendasi|rekomendasikan|saran|terbaik|harga terbaik", text)
+        and filters.sort == "newest"
+        and not re.search(r"terbaru|newest|terakhir", text)
+    ):
+        return replace(filters, sort="price_asc")
+    return filters
 
 
 def validate_prompt(value: object) -> str:
