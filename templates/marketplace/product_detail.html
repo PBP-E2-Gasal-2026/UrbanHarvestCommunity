@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load marketplace_tags %}
+
+{% block title %}{{ product.name }} | Urban Harvest Community{% endblock %}
+
+{% block meta %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+{% endblock %}
+
+{% block footer %}{% include 'marketplace/_footer_compact.html' %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-5xl px-4 pt-32 pb-20 sm:px-6">
+  <nav class="flex flex-wrap gap-1 text-sm text-muted" aria-label="Breadcrumb">
+    <a href="{% url 'marketplace:catalog' %}" class="hover:text-white">Marketplace</a>
+    <span>/</span>
+    <a href="{% url 'marketplace:catalog' %}?category={{ product.category.slug }}" class="hover:text-white">{{ product.category.name }}</a>
+    <span>/</span>
+    <span class="text-body">{{ product.name }}</span>
+  </nav>
+
+  <div class="mt-6 grid gap-10 md:grid-cols-2">
+    <div class="flex flex-col gap-3">
+      <div class="aspect-square overflow-hidden rounded-[28px] bg-surface-2 ring-1 ring-white/10">
+        {% if gallery %}
+          <img data-gallery-main src="{{ gallery.0 }}" alt="{{ product.name }}" class="h-full w-full object-cover">
+        {% endif %}
+      </div>
+      {% if gallery|length > 1 %}
+        <div class="flex gap-2 overflow-x-auto" role="list" aria-label="Foto produk">
+          {% for photo in gallery %}
+            <button type="button" data-gallery-thumb="{{ photo }}" aria-label="Foto {{ forloop.counter }}"
+                    class="h-16 w-16 shrink-0 overflow-hidden rounded-xl ring-2 transition {% if forloop.first %}ring-white{% else %}ring-transparent opacity-60 hover:opacity-100{% endif %}">
+              <img src="{{ photo }}" alt="" class="h-full w-full object-cover">
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <p class="text-xs font-semibold tracking-[0.12em] text-muted uppercase">{{ product.category.name }}</p>
+      <h1 class="text-3xl font-semibold tracking-tight">{{ product.name }}</h1>
+      <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+        {% if product.rating_count %}
+          <a href="#ulasan" class="text-white hover:underline"><span class="text-warning">&#9733;</span> {{ product.rating_avg|floatformat:1 }}</a>
+          <span>{{ product.rating_count }} ulasan</span>
+        {% else %}
+          <span>Belum ada ulasan</span>
+        {% endif %}
+        <span aria-hidden="true">·</span>
+        <span>{{ product.sold_count }} terjual</span>
+      </p>
+      <p class="mt-2 text-3xl font-semibold tracking-tight">{{ product.price|rupiah }} <span class="text-base font-normal text-muted">/ {{ product.unit }}</span></p>
+      <p class="text-sm {% if product.is_available %}text-body{% else %}text-danger{% endif %}">
+        {% if product.is_available %}Stok {{ product.stock }} {{ product.unit }}{% else %}Stok habis{% endif %}
+        {% if product.min_order > 1 %}<span class="text-muted"> · Min. beli {{ product.min_order }} {{ product.unit }}</span>{% endif %}
+        {% if product.harvested_at %}<span class="text-muted"> · Dipanen {{ product.harvested_at|date:"d M Y" }}</span>{% endif %}
+      </p>
+
+      {% include 'marketplace/_messages.html' %}
+
+      {% if product.is_available and not can_manage %}
+        {% if user.is_authenticated %}
+          <form method="post" action="{% url 'marketplace:cart_add' product.pk %}" class="mt-4 flex flex-wrap items-center gap-3">
+            {% csrf_token %}
+            <label class="flex items-center rounded-full border border-white/10">
+              <span class="sr-only">Jumlah</span>
+              <button type="button" data-step="-1" class="h-11 w-11 text-lg text-muted transition hover:text-white" aria-label="Kurangi">&minus;</button>
+              <input type="number" name="quantity" value="{{ product.min_order }}" min="{{ product.min_order }}" max="{{ product.stock }}" class="w-10 appearance-none bg-transparent text-center text-sm tabular-nums [&::-webkit-inner-spin-button]:appearance-none">
+              <button type="button" data-step="1" class="h-11 w-11 text-lg text-muted transition hover:text-white" aria-label="Tambah">+</button>
+            </label>
+            <button type="submit" class="rounded-full border border-white/15 px-6 py-3 text-sm font-medium transition hover:bg-white/10">+ Keranjang</button>
+            <button type="submit" formaction="{% url 'marketplace:buy_now' product.pk %}" class="rounded-full bg-white px-6 py-3 text-sm font-medium text-ink transition hover:bg-white-hover">Beli sekarang</button>
+          </form>
+        {% else %}
+          <a href="{% url 'authentication:login' %}" class="mt-4 self-start rounded-full bg-white px-6 py-3 text-sm font-medium text-ink transition hover:bg-white-hover">Masuk untuk membeli</a>
+        {% endif %}
+      {% endif %}
+
+      {% if can_manage %}
+        <a href="{% url 'marketplace:product_update' product.pk %}" class="mt-4 self-start rounded-full border border-white/15 px-5 py-2.5 text-sm transition hover:bg-white/10">Edit produk</a>
+      {% endif %}
+
+      <p class="mt-6 whitespace-pre-line text-body">{{ product.description|default:"Belum ada deskripsi." }}</p>
+
+      <a href="{% url 'marketplace:seller_store' product.seller.username %}" class="mt-6 flex items-center gap-4 rounded-3xl bg-surface-2 p-4 transition hover:bg-white/10">
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-brand-tint text-lg font-semibold text-brand-soft">{{ product.merchant_name|first|upper }}</span>
+        <span class="flex-1">
+          <span class="block font-medium">{{ product.merchant_name }}</span>
+          <span class="block text-sm text-muted">{{ product.location }}</span>
+        </span>
+        <span class="text-sm text-muted">Kunjungi toko &rarr;</span>
+      </a>
+    </div>
+  </div>
+
+  <section class="mt-16" aria-labelledby="pickup-title">
+    <h2 id="pickup-title" class="text-xl font-semibold tracking-tight">Titik pengambilan</h2>
+    <p class="mt-1 text-sm text-body">{% if product.pickup_address %}{{ product.pickup_address }}, {% endif %}{{ product.location }}</p>
+    {% if product.pickup_notes %}<p class="mt-1 text-sm text-muted">{{ product.pickup_notes }}</p>{% endif %}
+    {% if product.latitude and product.longitude %}
+      <div id="pickup-map" data-lat="{{ product.latitude|stringformat:'s' }}" data-lng="{{ product.longitude|stringformat:'s' }}" data-label="{{ product.location }}"
+           class="relative isolate z-0 mt-4 h-72 overflow-hidden rounded-3xl ring-1 ring-white/10"></div>
+      <a class="mt-3 inline-block text-sm text-brand-soft hover:underline" target="_blank" rel="noopener"
+         href="https://www.google.com/maps/dir/?api=1&destination={{ product.latitude|stringformat:'s' }},{{ product.longitude|stringformat:'s' }}">Petunjuk arah &rarr;</a>
+    {% else %}
+      <p class="mt-4 rounded-3xl bg-surface-2 px-5 py-4 text-sm text-muted">Penjual belum menandai titik di peta.</p>
+    {% endif %}
+  </section>
+
+  <section id="ulasan" class="mt-16" aria-labelledby="reviews-title">
+    <div class="flex items-baseline justify-between">
+      <h2 id="reviews-title" class="text-xl font-semibold tracking-tight">Ulasan</h2>
+      {% if product.rating_count %}
+        <p class="text-sm text-muted"><span class="text-warning">&#9733;</span> <span class="text-white">{{ product.rating_avg|floatformat:1 }}</span> dari {{ product.rating_count }} ulasan</p>
+      {% endif %}
+    </div>
+    {% if reviews %}
+      <ul class="mt-4 divide-y divide-line">
+        {% for review in reviews %}
+          <li class="py-5">
+            <div class="flex items-center justify-between gap-4 text-sm">
+              <span class="font-medium">{{ review.buyer.username }}</span>
+              <span class="text-muted">{{ review.created_at|date:"d M Y" }}</span>
+            </div>
+            <p class="mt-1 text-sm text-warning" aria-label="Rating {{ review.rating }} dari 5">{% stars review.rating %}</p>
+            {% if review.comment %}<p class="mt-2 text-body">{{ review.comment }}</p>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="mt-4 text-sm text-muted">Belum ada ulasan. Ulasan muncul setelah pembeli menyelesaikan pesanan.</p>
+    {% endif %}
+  </section>
+
+  {% if seller_products %}
+    <div class="mt-16">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Produk lain dari {{ product.merchant_name }}</h2>
+        <a href="{% url 'marketplace:seller_store' product.seller.username %}" class="link text-sm">Lihat toko</a>
+      </div>
+      <div class="mt-4 grid gap-5 sm:grid-cols-2 md:grid-cols-4">
+        {% for product in seller_products %}{% include 'marketplace/_product_card.html' %}{% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if similar_products %}
+    <div class="mt-12">
+      <h2 class="text-lg font-semibold">Produk serupa</h2>
+      <div class="mt-4 grid gap-5 sm:grid-cols-2 md:grid-cols-4">
+        {% for product in similar_products %}{% include 'marketplace/_product_card.html' %}{% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% include 'marketplace/_card_scripts.html' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  (function () {
+    const el = document.getElementById('pickup-map');
+    if (!el || !window.L) return;
+    const point = [Number(el.dataset.lat), Number(el.dataset.lng)];
+    const map = L.map(el, { scrollWheelZoom: false }).setView(point, 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap',
+    }).addTo(map);
+    L.marker(point).addTo(map).bindPopup(el.dataset.label);
+  })();
+</script>
+<script>
+  const galleryMain = document.querySelector('[data-gallery-main]');
+  document.querySelectorAll('[data-gallery-thumb]').forEach(function (thumb, _, all) {
+    thumb.addEventListener('click', function () {
+      galleryMain.src = thumb.dataset.galleryThumb;
+      all.forEach(function (other) {
+        other.classList.toggle('ring-white', other === thumb);
+        other.classList.toggle('ring-transparent', other !== thumb);
+        other.classList.toggle('opacity-60', other !== thumb);
+      });
+    });
+  });
+
+  document.querySelectorAll('[data-step]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      const input = button.parentElement.querySelector('input[name="quantity"]');
+      const next = Number(input.value || 1) + Number(button.dataset.step);
+      input.value = Math.min(Math.max(next, Number(input.min) || 1), Number(input.max));
+    });
+  });
+</script>
+{% endblock %}

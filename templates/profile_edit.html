@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit profil | Urban Harvest Community{% endblock %}
+
+{% block content %}
+<section class="min-h-screen px-4 pt-40 pb-16">
+  <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    {% include 'includes/messages.html' %}
+
+    <article class="card p-6">
+      <h1 class="font-display text-3xl font-bold">Edit profil</h1>
+      <p class="mt-2 text-sm text-muted">
+        Username: <strong class="text-white">{{ request.user.username }}</strong> 
+      </p>
+
+      <form method="post" enctype="multipart/form-data" class="mt-6 flex flex-col gap-4">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+
+        {% with photo=form.photo %}
+          <div class="field{% if photo.errors %} field-has-error{% endif %}">
+            <label for="{{ photo.id_for_label }}">{{ photo.label }}</label>
+            {% if form.instance.photo %}
+              <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted">
+                <span>
+                  Foto saat ini:
+                  <a href="{{ form.instance.photo.url }}" class="link" target="_blank" rel="noopener">{{ form.instance.photo.name }}</a>
+                </span>
+                <label for="{{ photo.html_name }}-clear_id" class="flex items-center gap-2 font-normal text-body">
+                  <input type="checkbox" name="{{ photo.html_name }}-clear" id="{{ photo.html_name }}-clear_id" class="control">
+                  Hapus foto
+                </label>
+              </div>
+            {% endif %}
+            <input type="file" name="{{ photo.html_name }}" id="{{ photo.id_for_label }}" accept="image/*">
+            {% if photo.help_text %}<p class="field-help">{{ photo.help_text }}</p>{% endif %}
+            {% for error in photo.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+          </div>
+        {% endwith %}
+
+        {% include 'includes/form_fields.html' with skip='photo' %}
+
+        <div class="mt-2 flex flex-wrap gap-3">
+          <button type="submit" class="btn btn-brand">Simpan</button>
+          <a href="{% url 'authentication:profile' request.user.username %}" class="btn btn-secondary">Batal</a>
+        </div>
+      </form>
+    </article>
+  </div>
+</section>
+{% endblock %}

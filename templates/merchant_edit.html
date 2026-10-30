@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_new %}Buat{% else %}Edit{% endif %} merchant | Urban Harvest Community{% endblock %}
+
+{% block content %}
+<section class="min-h-screen px-4 pt-40 pb-16">
+  <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    {% include 'includes/messages.html' %}
+
+    <article class="card p-6">
+      <p class="text-xs font-semibold tracking-widest text-brand-soft uppercase">Merchant</p>
+      <h1 class="mt-1 font-display text-3xl font-bold">{% if is_new %}Buat merchant{% else %}Edit merchant{% endif %}</h1>
+      <p class="mt-2 text-sm text-muted">
+        Lokasi dan kontak hanya tampil ke publik jika kamu mencentang pilihannya.
+        Kamu tetap bisa melihat keduanya di profilmu.
+      </p>
+
+      <form method="post" class="mt-6 flex flex-col gap-4">
+        {% csrf_token %}
+        {% include 'includes/form_fields.html' %}
+        <div class="mt-2 flex flex-wrap gap-3">
+          <button type="submit" class="btn btn-brand">Simpan</button>
+          <a href="{% url 'authentication:profile' request.user.username %}" class="btn btn-secondary">Batal</a>
+        </div>
+      </form>
+    </article>
+  </div>
+</section>
+{% endblock %}

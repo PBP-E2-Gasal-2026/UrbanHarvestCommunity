@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load marketplace_tags %}
+
+{% block title %}Keranjang | Urban Harvest Community{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-5xl px-4 pt-32 pb-24 sm:px-6">
+  <h1 class="text-4xl font-semibold tracking-tight">Keranjang</h1>
+  {% include 'marketplace/_messages.html' %}
+
+  {% if groups %}
+    <div class="mt-10 grid gap-12 lg:grid-cols-[1fr_20rem]">
+      <div class="flex flex-col gap-6">
+        {% for group in groups %}
+          <section class="rounded-3xl bg-surface-2/60 p-5 ring-1 ring-white/5 sm:p-6" aria-label="Toko {{ group.seller.username }}">
+            <header class="flex items-center gap-3 border-b border-line pb-4">
+              <form method="post" action="{% url 'marketplace:cart_select' %}" data-auto-submit>
+                {% csrf_token %}
+                <input type="hidden" name="target" value="seller">
+                <input type="hidden" name="id" value="{{ group.seller.pk }}">
+                <input type="hidden" name="selected" value="{% if group.all_selected %}0{% else %}1{% endif %}">
+                <input type="checkbox" class="control" aria-label="Pilih semua dari {{ group.seller.username }}" {% if group.all_selected %}checked{% endif %}>
+              </form>
+              <a href="{% url 'marketplace:seller_store' group.seller.username %}" class="flex items-center gap-2 font-medium hover:underline">
+                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-tint text-xs font-semibold text-brand-soft">{{ group.seller.username|first|upper }}</span>
+                {{ group.seller.username }}
+              </a>
+            </header>
+
+            <ul class="divide-y divide-line">
+              {% for item in group.items %}
+                <li class="flex gap-4 py-5 last:pb-0">
+                  <form method="post" action="{% url 'marketplace:cart_select' %}" data-auto-submit class="pt-9">
+                    {% csrf_token %}
+                    <input type="hidden" name="target" value="item">
+                    <input type="hidden" name="id" value="{{ item.pk }}">
+                    <input type="hidden" name="selected" value="{% if item.selected %}0{% else %}1{% endif %}">
+                    <input type="checkbox" class="control" aria-label="Pilih {{ item.product.name }}" {% if item.selected %}checked{% endif %}>
+                  </form>
+                  <a href="{% url 'marketplace:product_detail' item.product.pk %}" class="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-surface-2">
+                    {% if item.product.photo_url %}<img src="{{ item.product.photo_url }}" alt="{{ item.product.name }}" class="h-full w-full object-cover">{% endif %}
+                  </a>
+                  <div class="flex min-w-0 flex-1 flex-col justify-between gap-3">
+                    <div class="flex justify-between gap-4">
+                      <div class="min-w-0">
+                        <a href="{% url 'marketplace:product_detail' item.product.pk %}" class="font-medium hover:underline">{{ item.product.name }}</a>
+                        <p class="mt-0.5 text-sm text-muted">{{ item.product.price|rupiah }} / {{ item.product.unit }} · Ambil di {{ item.product.location }}</p>
+                        {% if item.product.min_order > 1 %}<p class="mt-0.5 text-xs text-muted">Min. beli {{ item.product.min_order }} {{ item.product.unit }}</p>{% endif %}
+                        {% if item.quantity > item.product.stock %}<p class="mt-1 text-xs text-danger">Stok tersisa {{ item.product.stock }}</p>{% endif %}
+                      </div>
+                      <p class="shrink-0 font-semibold tracking-tight">{{ item.subtotal|rupiah }}</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                      <form method="post" action="{% url 'marketplace:cart_update' item.pk %}" class="flex items-center rounded-full border border-white/10">
+                        {% csrf_token %}
+                        <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}" class="h-9 w-9 text-lg text-muted transition hover:text-white disabled:opacity-30" aria-label="Kurangi" {% if item.quantity <= item.product.min_order %}disabled{% endif %}>&minus;</button>
+                        <span class="w-8 text-center text-sm tabular-nums">{{ item.quantity }}</span>
+                        <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}" class="h-9 w-9 text-lg text-muted transition hover:text-white disabled:opacity-30" aria-label="Tambah" {% if item.quantity >= item.product.stock %}disabled{% endif %}>+</button>
+                      </form>
+                      <form method="post" action="{% url 'marketplace:cart_remove' item.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="text-sm text-muted transition hover:text-danger">Hapus</button>
+                      </form>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+            {% if group.subtotal %}
+              <p class="mt-4 border-t border-line pt-4 text-right text-sm text-muted">Subtotal toko <span class="ml-2 font-semibold text-white tabular-nums">{{ group.subtotal|rupiah }}</span></p>
+            {% endif %}
+          </section>
+        {% endfor %}
+      </div>
+
+      <aside class="h-fit rounded-3xl bg-surface-2 p-6 lg:sticky lg:top-28">
+        <dl class="flex justify-between text-sm text-muted">
+          <dt>Produk dipilih</dt><dd class="tabular-nums">{{ selected_count }}</dd>
+        </dl>
+        <dl class="mt-2 flex justify-between text-sm text-muted">
+          <dt>Pengambilan</dt><dd>Di lokasi penjual</dd>
+        </dl>
+        <dl class="mt-4 flex justify-between border-t border-line pt-4 text-lg font-semibold tracking-tight">
+          <dt>Total</dt><dd class="tabular-nums">{{ total|rupiah }}</dd>
+        </dl>
+        <form method="post" action="{% url 'marketplace:checkout' %}" class="mt-6 flex flex-col gap-3">
+          {% csrf_token %}
+          <textarea name="note" rows="2" maxlength="500" placeholder="Catatan untuk penjual (opsional)"
+                    class="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none"></textarea>
+          <button type="submit" class="w-full rounded-full bg-white py-3 text-sm font-medium text-ink transition hover:bg-white-hover disabled:opacity-40" {% if not selected_count %}disabled{% endif %}>Checkout</button>
+        </form>
+        <p class="mt-3 text-center text-xs text-muted">Pesanan dibuat terpisah untuk setiap toko. Bayar saat pengambilan.</p>
+      </aside>
+    </div>
+  {% else %}
+    <div class="py-24 text-center">
+      <p class="text-lg font-medium">Keranjangmu masih kosong.</p>
+      <a href="{% url 'marketplace:catalog' %}" class="mt-3 inline-block text-sm text-brand-soft hover:underline">Jelajahi marketplace &rarr;</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Centang langsung tersimpan, tanpa tombol simpan.
+  document.querySelectorAll('form[data-auto-submit] input[type="checkbox"]').forEach(function (box) {
+    box.addEventListener('change', () => box.form.submit());
+  });
+</script>
+{% endblock %}

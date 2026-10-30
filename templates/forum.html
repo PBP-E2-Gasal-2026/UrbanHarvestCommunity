@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Forum | Urban Harvest Community{% endblock %}
+
+{% block content %}
+<main class="min-h-screen bg-canvas px-4 py-10 text-white sm:px-6 lg:px-8">
+    <section class="mx-auto max-w-4xl">
+        <h1 class="mb-8 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            Forum
+        </h1>
+        <nav class="mb-10 flex flex-wrap items-center gap-3 border-b border-line pb-8">
+            <a href="{% url 'community_forum:feed' %}" 
+                class="btn btn-secondary">
+                Lihat Feed
+            </a>
+
+            {% if request.user.is_authenticated %}
+                <!--Create post-->
+                <a href="{% url 'community_forum:create_post' %}" 
+                    class="btn btn-brand">
+                    Tambah Postingan
+                </a>
+            {% else %}
+                <p class="text-sm text-muted">
+                    <a href="{% url 'authentication:login' %}" 
+                        class="link">
+                        Login</a> 
+                    untuk membuat postingan
+                </p>
+            {% endif %}
+        </nav>
+        
+        <!--Show Community-->
+        <div class="space-y-6"> <!--Postingan-->
+            {% for post in post_list %}
+                <article class="card space-y-5 p-5 transition-colors hover:border-glass-border sm:p-6">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounder-full bg-brand-tint text-lg font-bold text-brand-soft">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-lg font-bold text-brand-soft">
+                            {{ post.creator.username|first|upper }}
+                        </div>
+                        <div class="min-w-0">
+                            <!--Username-->
+                            <h2 class="truncate text-base font-bold text-white">{{ post.creator.username }}</h2>
+                            
+                            <!--Tanggal-->
+                            <small class="text-xs text-muted">
+                                {% if post.is_edited %}
+                                    <p>Diperbarui pada: {{ post.updated_at }}</p>
+                                {% else %}
+                                    <p>{{ post.created_at }}</p>
+                                {% endif %}
+                            </small>
+                        </div>  
+                    </div>
+
+                    <!--Content-->
+                    <p class="whitespace-pre-wrap break-words text-sm leading-7 text-body sm:text-base">{{ post.content|linebreaksbr }}</p>
+
+                    <!-- Jumlah Like & Comment-->
+                    <div class="flex flex-wrap items-center gap-3 border-b border-line pb-4">
+                        <span class="badge badge-brand">♥ {{ post.like_count }} likes</span>
+                        <span class="badge badge-neutral">{{ post.comment_count }} comments</span>
+                    </div>
+
+                    {% if request.user.is_authenticated %}
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!--Toggle like-->
+                            <form method="POST" action="{% url 'community_forum:toggle_like' post.id_post %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary btn-sm">
+                                    {% if request.user in post.likes.all %}Unlike{% else %}Like{% endif %}
+                                </button>
+                            </form>
+
+                            <!--Edit & Hapus post-->
+                            {% if post.creator == request.user %}
+                                <a href="{% url 'community_forum:edit_post' post.id_post %}" 
+                                    class="btn btn-ghost btn-sm">
+                                    Edit
+                                </a>
+
+                                <form method="POST"
+                                    action="{% url 'community_forum:delete_post' post.id_post %}"
+                                    onsubmit="return confirm('Hapus postingan ini?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!--Comment-->
+                    <div class="space-y-5 border-t border-line pt-5">
+                        <h3 class="text-sm font-bold text-white">Komentar <span class="ml-1 text-muted">({{ post.comment_count }})</span></h3>
+
+                        {% for comment in post.comments.all %}
+                            <div class="space-y-3 rounded-lg border border-line bg-surface-2/50 p-4">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <strong class="text-sm font-semibold text-brand-soft">{{ comment.creator.username }}</strong>
+                                    <small class="text-xs text-muted">{{ comment.created_at|date:"d M Y H:i" }}</small>
+                                </div>
+                                
+                                <p class="whitespace-pre-wrap break-words text-sm leading-6 text-body">{{ comment.content|linebreaksbr }}</p>
+
+                                {% if comment.creator == request.user %}
+                                    <div class="flex flex-wrap items-center gap-2 border-t border-line pt-3">
+                                        <a href="{% url 'community_forum:edit_comment' comment.id_comment %}" 
+                                            class="link text-xs">
+                                            Edit
+                                        </a>
+
+                                        <form method="POST"
+                                            action="{% url 'community_forum:delete_comment' comment.id_comment %}"
+                                            onsubmit="return confirm('Hapus komentar?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="rounded-lg border border-dashed border-line px-4 py-6 text-center text-sm text-muted">Belum ada komentar. Jadilah yang pertama!</p>
+                        {% endfor %}
+
+                        {% if request.user.is_authenticated %}
+                            <form method="POST" action="{% url 'community_forum:create_comment' post.id_post %}" class="space-y-3 border-t border-line pt-5">
+                                {% csrf_token %}
+                                <div class="field">
+                                    <label for="comment-{{ post.id_post }}">Tulis komentar</label>
+                                    <textarea id="comment-{{ post.id_post }}"
+                                              name="content"
+                                              maxlength="1000"
+                                              required
+                                              placeholder="Bagikan pendapatmu..."
+                                              class="min-h-24 resize-y">
+                                    </textarea>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button type="submit" class="btn btn-brand btn-sm">Kirim</button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                </article>
+            {% empty %}
+                <div class="rounded-2xl border border-dashed border-line bg-surface p-10 text-center sm:p-14">
+                    <h2 class="mb-2 font-display text-2xl font-bold text-white">Belum ada postingan.</h2>
+                    <p class="text-sm leading-6 text-muted">Jadilah yang pertama!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,1 @@
+<span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {% if order.status == 'cancelled' %}bg-danger-tint text-danger{% elif order.status == 'completed' %}bg-brand-tint text-brand-soft{% elif order.status == 'ready' %}bg-white text-ink{% else %}bg-warning-tint text-warning{% endif %}">{{ order.get_status_display }}</span>

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load marketplace_tags %}
+
+{% block title %}Pesanan #{{ order.pk }} | Urban Harvest Community{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-3xl px-4 pt-32 pb-24 sm:px-6">
+  {% if is_seller_view %}
+    <a href="{% url 'marketplace:sales' %}" class="text-sm text-muted hover:text-white">&larr; Pesanan masuk</a>
+  {% else %}
+    <a href="{% url 'marketplace:orders' %}" class="text-sm text-muted hover:text-white">&larr; Pesanan saya</a>
+  {% endif %}
+
+  <div class="mt-4 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-4xl font-semibold tracking-tight">Pesanan #{{ order.pk }}</h1>
+      <p class="mt-2 text-sm text-muted">
+        {{ order.created_at|date:"d M Y, H:i" }} ·
+        {% if is_seller_view %}Pembeli: {{ order.buyer.username }}{% else %}Toko: {% if order.seller %}<a href="{% url 'marketplace:seller_store' order.seller.username %}" class="text-white hover:underline">{{ order.seller.username }}</a>{% else %}-{% endif %}{% endif %}
+      </p>
+    </div>
+    {% include 'marketplace/_order_status.html' %}
+  </div>
+  {% include 'marketplace/_messages.html' %}
+
+  {% if order.status != 'cancelled' %}
+    <ol class="mt-10 grid grid-cols-4 gap-2 text-xs" aria-label="Progres pesanan">
+      {% for key, label in progress_steps %}
+        <li class="flex flex-col gap-2">
+          <span class="h-1 rounded-full {% if forloop.counter <= current_step %}bg-brand{% else %}bg-white/10{% endif %}"></span>
+          <span class="{% if forloop.counter <= current_step %}text-white{% else %}text-muted{% endif %}">{{ label }}</span>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="mt-8 rounded-2xl bg-danger-tint px-4 py-3 text-sm text-danger">Dibatalkan: {{ order.cancel_reason }}</p>
+  {% endif %}
+
+  <ul class="mt-10 divide-y divide-line">
+    {% for item in items %}
+      <li class="py-5">
+        <div class="flex justify-between gap-4">
+          <div>
+            {% if item.product %}
+              <a href="{% url 'marketplace:product_detail' item.product.pk %}" class="font-medium hover:underline">{{ item.product_name }}</a>
+            {% else %}
+              <p class="font-medium">{{ item.product_name }}</p>
+            {% endif %}
+            <p class="mt-0.5 text-sm text-muted">{{ item.quantity }} × {{ item.price|rupiah }} · Ambil di {{ item.pickup_location }}</p>
+          </div>
+          <p class="shrink-0 font-semibold tracking-tight">{{ item.subtotal|rupiah }}</p>
+        </div>
+
+        {% if item.review %}
+          <p class="mt-3 text-sm"><span class="text-warning">{% stars item.review.rating %}</span> <span class="text-muted">{{ item.review.comment }}</span></p>
+        {% elif item.can_review %}
+          <form method="post" action="{% url 'marketplace:review_create' item.pk %}" class="mt-4 flex flex-col gap-3 rounded-2xl bg-surface-2 p-4">
+            {% csrf_token %}
+            <fieldset class="flex items-center gap-1" aria-label="Rating">
+              {% for value in '12345' %}
+                <label data-star class="cursor-pointer text-2xl leading-none text-white/20 transition">
+                  <input type="radio" name="rating" value="{{ value }}" class="sr-only" required>
+                  <span aria-label="{{ value }} bintang">&#9733;</span>
+                </label>
+              {% endfor %}
+            </fieldset>
+            <textarea name="comment" rows="2" maxlength="1000" placeholder="Bagaimana produknya?"
+                      class="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none"></textarea>
+            <button type="submit" class="self-start rounded-full bg-white px-4 py-2 text-sm font-medium text-ink">Kirim ulasan</button>
+          </form>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  <div class="flex justify-between border-t border-line pt-5 text-lg font-semibold tracking-tight">
+    <span>Total</span><span>{{ order.total|rupiah }}</span>
+  </div>
+  <p class="mt-2 text-sm text-muted">Bayar di tempat saat pengambilan.</p>
+  {% if order.note %}<p class="mt-6 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-body">Catatan pembeli: {{ order.note }}</p>{% endif %}
+
+  {% if actions %}
+    <div class="mt-10 flex flex-wrap gap-3">
+      {% for action in actions %}
+        <form method="post" action="{% url 'marketplace:order_action' order.pk action %}"
+              {% if action == 'cancel' %}data-confirm="{% if is_seller_view %}Tolak pesanan ini? Stok akan dikembalikan.{% else %}Batalkan pesanan ini?{% endif %}"{% endif %}>
+          {% csrf_token %}
+          {% if action == 'confirm' %}
+            <button type="submit" class="rounded-full bg-white px-6 py-3 text-sm font-medium text-ink transition hover:bg-white-hover">Terima pesanan</button>
+          {% elif action == 'ready' %}
+            <button type="submit" class="rounded-full bg-white px-6 py-3 text-sm font-medium text-ink transition hover:bg-white-hover">Tandai siap diambil</button>
+          {% elif action == 'complete' %}
+            <button type="submit" class="rounded-full border border-white/15 px-6 py-3 text-sm font-medium transition hover:bg-white/10">Sudah diambil pembeli</button>
+          {% elif action == 'receive' %}
+            <button type="submit" class="rounded-full bg-white px-6 py-3 text-sm font-medium text-ink transition hover:bg-white-hover">Pesanan diterima</button>
+          {% elif action == 'cancel' %}
+            <button type="submit" class="rounded-full px-6 py-3 text-sm text-muted transition hover:text-danger">{% if is_seller_view %}Tolak pesanan{% else %}Batalkan pesanan{% endif %}</button>
+          {% endif %}
+        </form>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Bintang terisi sampai nilai yang dipilih / disorot.
+  document.querySelectorAll('fieldset[aria-label="Rating"]').forEach(function (group) {
+    const stars = [...group.querySelectorAll('[data-star]')];
+    const paint = (count) => stars.forEach(function (star, i) {
+      star.classList.toggle('text-warning', i < count);
+      star.classList.toggle('text-white/20', i >= count);
+    });
+    const selected = () => Number(group.querySelector('input:checked')?.value || 0);
+    stars.forEach(function (star, i) {
+      star.addEventListener('mouseenter', () => paint(i + 1));
+      star.querySelector('input').addEventListener('change', () => paint(selected()));
+    });
+    group.addEventListener('mouseleave', () => paint(selected()));
+  });
+
+  document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (!confirm(form.dataset.confirm)) event.preventDefault();
+    });
+  });
+</script>
+{% endblock %}

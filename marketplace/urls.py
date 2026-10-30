@@ -1,0 +1,53 @@
+from django.urls import path
+
+from .views import (
+    buy_now_view,
+    cart_add_view,
+    cart_remove_view,
+    cart_select_view,
+    cart_update_view,
+    cart_view,
+    catalog_view,
+    checkout_view,
+    my_products_view,
+    order_action_view,
+    order_detail_view,
+    orders_view,
+    product_api,
+    product_archive_view,
+    product_create_view,
+    product_delete_view,
+    product_detail_view,
+    product_update_view,
+    review_create_view,
+    sales_view,
+    search_api,
+    seller_store_view,
+)
+
+app_name = 'marketplace'
+
+urlpatterns = [
+    path('', catalog_view, name='catalog'),
+    path('products/<int:pk>/', product_detail_view, name='product_detail'),
+    path('products/new/', product_create_view, name='product_create'),
+    path('products/<int:pk>/edit/', product_update_view, name='product_update'),
+    path('products/<int:pk>/archive/', product_archive_view, name='product_archive'),
+    path('products/<int:pk>/delete/', product_delete_view, name='product_delete'),
+    path('sellers/<str:username>/', seller_store_view, name='seller_store'),
+    path('my-products/', my_products_view, name='my_products'),
+    path('api/search/', search_api, name='search_api'),
+    path('api/products/<int:pk>/', product_api, name='product_api'),
+    path('cart/', cart_view, name='cart'),
+    path('cart/add/<int:pk>/', cart_add_view, name='cart_add'),
+    path('cart/items/<int:pk>/update/', cart_update_view, name='cart_update'),
+    path('cart/items/<int:pk>/remove/', cart_remove_view, name='cart_remove'),
+    path('checkout/', checkout_view, name='checkout'),
+    path('orders/', orders_view, name='orders'),
+    path('orders/<int:pk>/', order_detail_view, name='order_detail'),
+    path('orders/<int:pk>/<str:action>/', order_action_view, name='order_action'),
+    path('cart/buy-now/<int:pk>/', buy_now_view, name='buy_now'),
+    path('cart/select/', cart_select_view, name='cart_select'),
+    path('reviews/<int:pk>/new/', review_create_view, name='review_create'),
+    path('sales/', sales_view, name='sales'),
+]
