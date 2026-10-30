@@ -1,9 +1,16 @@
 from django.urls import path
 
 from .views import (
-    login_view, logout_view, profile_edit_view, profile_view, register_view, 
-    seller_application_list_view, seller_application_review_view, seller_apply_view, merchant_edit_view)
-
+    login_view,
+    logout_view,
+    merchant_edit_view,
+    profile_edit_view,
+    profile_view,
+    register_view,
+    seller_application_list_view,
+    seller_application_review_view,
+    seller_apply_view,
+)
 
 app_name = 'authentication'
 

@@ -1,6 +1,16 @@
 from django.urls import path
 
-from .views import show_community, create_post, create_comment, edit_post, delete_post, toggle_like, edit_comment, delete_comment, feed
+from .views import (
+    create_comment,
+    create_post,
+    delete_comment,
+    delete_post,
+    edit_comment,
+    edit_post,
+    feed,
+    show_community,
+    toggle_like,
+)
 
 app_name = 'community_forum'
 

@@ -7,8 +7,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .forms import LoginForm, ProfileForm, RegistrationForm, SellerReviewForm, MerchantForm
-from .models import Profile, Role, Session, User, SellerApplication, Merchant
+from .forms import (
+    LoginForm,
+    MerchantForm,
+    ProfileForm,
+    RegistrationForm,
+    SellerReviewForm,
+)
+from .models import Merchant, Profile, Role, SellerApplication, Session, User
 from .permissions import admin_required, has_role, role_required
 
 

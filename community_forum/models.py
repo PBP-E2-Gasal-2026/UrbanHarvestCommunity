@@ -1,7 +1,9 @@
 import uuid
+from typing import ClassVar
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.conf import settings
 
 # Create your models here.
 
@@ -34,7 +36,7 @@ class Post(models.Model):
         return self.comments.count()
     
     class Meta:
-        ordering = ["-created_at"]
+        ordering: ClassVar[list[str]] = ["-created_at"]
     
 
 class Comment(models.Model):
@@ -44,4 +46,4 @@ class Comment(models.Model):
     content = models.TextField(max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
-        ordering = ["created_at"]
+        ordering: ClassVar[list[str]] = ["created_at"]

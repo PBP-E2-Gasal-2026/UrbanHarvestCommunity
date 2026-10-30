@@ -2,9 +2,10 @@ from django.contrib.sessions.models import Session as DjangoSession
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from .forms import LoginForm, MerchantForm
-from .models import SellerApplication, Profile, Role, Session, User, Merchant
+from .forms import LoginForm
+from .models import Merchant, Profile, Role, SellerApplication, Session, User
 from .permissions import has_role
+
 
 class UserLoginTests(TestCase):
     def setUp(self):

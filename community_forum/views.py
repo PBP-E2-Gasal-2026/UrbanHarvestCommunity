@@ -1,12 +1,12 @@
 from django.contrib import messages
-from django.core import serializers
-from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
 from django.db.models import Count
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Comment
-from .forms import PostForm, CommentForm
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+
+from .forms import CommentForm, PostForm
+from .models import Comment, Post
+
 
 # Create your views here.
 def feed(request):

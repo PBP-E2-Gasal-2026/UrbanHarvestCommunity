@@ -1,17 +1,20 @@
-from django.forms import ModelForm, TextInput, Textarea
+from typing import ClassVar
 
-from .models import Post, Comment
+from django.forms import ModelForm, Textarea
+
+from .models import Comment, Post
+
 
 class PostForm(ModelForm):
     class Meta:
         model = Post
-        fields = [
+        fields: ClassVar[list[str]] = [
             "content",
         ]
-        labels = {
+        labels: ClassVar[dict[str, str]] = {
             "content": "Isi Postingan",
         }
-        widgets = {
+        widgets: ClassVar[dict[str, Textarea]] = {
             "content": Textarea(
                 attrs={
                     "placeholder": "Apa yang ingin dibagikan?",
@@ -24,13 +27,13 @@ class PostForm(ModelForm):
 class CommentForm(ModelForm):
     class Meta:
         model = Comment
-        fields = [
+        fields: ClassVar[list[str]] = [
             "content",
         ]
-        labels = {
+        labels: ClassVar[dict[str, str]] = {
             "content": "Isi komentar"
         }
-        widgets = {
+        widgets: ClassVar[dict[str, Textarea]] = {
             "content": Textarea(
                 attrs={
                     "placeholder": "Tuliskan komentar",

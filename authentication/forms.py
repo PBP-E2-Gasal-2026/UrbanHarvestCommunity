@@ -1,26 +1,28 @@
+from typing import ClassVar
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import Profile, User, SellerApplication, Merchant
+from .models import Merchant, Profile, SellerApplication, User
 
 MAX_PHOTO_SIZE = 2 * 1024 * 1024
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['photo','bio', 'location', 'community']
-        labels = {
+        fields: ClassVar[list[str]] = ['photo','bio', 'location', 'community']
+        labels: ClassVar[dict[str, str]] = {
             'photo': 'Foto profil',
             'bio': 'Bio',
             'location': 'Lokasi',
             'community': 'Komunitas',
         }
-        help_texts = {
+        help_texts: ClassVar[dict[str, str]] = {
             'photo': 'Foto berupa gambar, maksimal 2 MB.',
         }
-        widgets = {
+        widgets: ClassVar[dict[str, forms.Widget]] = {
             'bio': forms.Textarea(attrs={'rows': 4}),
         }
 
@@ -99,8 +101,8 @@ class SellerReviewForm(forms.Form):
 class MerchantForm(forms.ModelForm):
     class Meta:
         model = Merchant
-        fields = ['name', 'description', 'location', 'show_location', 'contact', 'show_contact']
-        labels = {
+        fields: ClassVar[list[str]] = ['name', 'description', 'location', 'show_location', 'contact', 'show_contact']
+        labels: ClassVar[dict[str, str]] = {
             'name': 'Nama merchant',
             'description': 'Deskripsi',
             'location': 'Lokasi',
@@ -108,7 +110,7 @@ class MerchantForm(forms.ModelForm):
             'contact': 'Kontak',
             'show_contact': 'Tampilkan kontak ke publik',
         }
-        widgets = {
+        widgets: ClassVar[dict[str, forms.Widget]] = {
             'description': forms.Textarea(attrs={'rows': 4}),
             'show_location': forms.CheckboxInput(attrs={'class': 'control'}),
             'show_contact': forms.CheckboxInput(attrs={'class': 'control'}),
