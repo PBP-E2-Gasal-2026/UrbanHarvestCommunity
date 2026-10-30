@@ -5,6 +5,7 @@ import requests
 from django.test import SimpleTestCase
 
 from llm_searching.exceptions import ProviderUnavailable
+from llm_searching.filters import SearchFilters
 from llm_searching.openrouter import OpenRouterClient
 
 
@@ -70,7 +71,7 @@ class OpenRouterTests(SimpleTestCase):
         args, kwargs = transport.call_args
         self.assertEqual(args[0], "https://openrouter.ai/api/v1/chat/completions")
         self.assertEqual(kwargs["timeout"], (5, 30))
-        self.assertEqual(kwargs["json"]["model"], "google/gemma-3-27b-it:free")
+        self.assertEqual(kwargs["json"]["model"], "google/gemma-3-27b-it")
         self.assertEqual(kwargs["headers"]["Authorization"], "Bearer private-key")
         self.assertNotIn("private-key", json.dumps(kwargs["json"]))
         self.assertEqual(kwargs["json"]["response_format"]["type"], "json_schema")
@@ -103,3 +104,30 @@ class OpenRouterTests(SimpleTestCase):
             ).extract("tomat", [])
         with self.assertRaises(ProviderUnavailable):
             OpenRouterClient(api_key="", request=Mock()).extract("tomat", [])
+
+    def test_ranking_receives_product_description_and_larger_response_budget(self):
+        transport = Mock(
+            return_value=Response(
+                json.dumps(
+                    {
+                        "choices": [
+                            {"message": {"content": json.dumps({"suggestions": []})}}
+                        ]
+                    }
+                )
+            )
+        )
+        candidate = Mock()
+        candidate.to_dict.return_value = {
+            "id": 7,
+            "name": "Tomat",
+            "description": "Dari kebun lokal",
+        }
+        OpenRouterClient(api_key="test", request=transport).suggest(
+            "rekomendasikan sayur", SearchFilters(categories=("sayuran",)), [candidate]
+        )
+        payload = transport.call_args.kwargs["json"]
+        data = json.loads(payload["messages"][-1]["content"])
+        self.assertIn("description", data["candidates"][0])
+        self.assertEqual(data["candidates"][0]["description"], "Dari kebun lokal")
+        self.assertEqual(payload["max_tokens"], 3000)

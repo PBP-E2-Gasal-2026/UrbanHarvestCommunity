@@ -144,3 +144,15 @@ class ViewsTests(TestCase):
         self.assertIn("/marketplace/products/42/", html)
         self.assertNotIn("<script>", html)
         self.assertIn("&lt;script&gt;", html)
+
+    def test_rate_limit_returns_retry_after(self):
+        for _ in range(5):
+            response = self.post()
+            self.assertEqual(response.status_code, 202)
+            SearchJob.objects.filter(pk=response.json()["id"]).update(
+                status="succeeded"
+            )
+        response = self.post()
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.json()["error_code"], "rate_limited")
+        self.assertTrue(1 <= int(response["Retry-After"]) <= 60)

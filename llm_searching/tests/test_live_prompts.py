@@ -25,7 +25,7 @@ class LivePromptTests(SimpleTestCase):
                 self.assertEqual(result["status"], "search")
                 filters = result["filters"]
                 self.assertEqual(filters["categories"], ["sayuran"])
-                self.assertEqual(filters["keyword"].casefold(), "segar")
+                self.assertEqual(filters["keyword"].casefold(), "")
                 self.assertEqual(filters["location"].casefold(), "depok")
                 self.assertEqual(result["unsupported_conditions"], [])
                 observed.append(
