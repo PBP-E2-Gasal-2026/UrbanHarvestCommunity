@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{# Tata letak halaman masuk/daftar: form di kiri, foto lahan dari landing page di kanan. #}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<section class="grid min-h-screen lg:grid-cols-2">
+  <div class="flex flex-col px-6 py-8 sm:px-12">
+    <a href="{% url 'main:show_main' %}" class="self-center text-2xl font-bold tracking-tight text-brand-soft">Urban Harvest</a>
+
+    <div class="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-12">
+      <h1 class="text-center font-display text-4xl font-semibold tracking-tight sm:text-5xl">{% block auth_title %}{% endblock %}</h1>
+      <p class="mt-3 text-center text-sm text-body">{% block auth_subtitle %}{% endblock %}</p>
+
+      <form method="post" class="mt-10 flex flex-col gap-4" novalidate>
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+          <p class="rounded-xl bg-danger-tint px-4 py-3 text-sm text-danger" role="alert">{{ error }}</p>
+        {% endfor %}
+        {% for field in form %}
+          <div class="flex flex-col gap-1.5">
+            <label for="{{ field.id_for_label }}" class="sr-only">{{ field.label }}</label>
+            <div class="relative">
+              <input type="{{ field.field.widget.input_type }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+                     placeholder="{{ field.label }}"
+                     {% if field.field.widget.input_type != 'password' and field.value %}value="{{ field.value }}"{% endif %}
+                     {% if field.field.required %}required{% endif %}
+                     {% if field.errors %}aria-invalid="true"{% endif %}
+                     autocomplete="{% if field.name == 'username' %}username{% elif field.name == 'email' %}email{% elif field.field.widget.input_type == 'password' %}{% block password_autocomplete %}current-password{% endblock %}{% endif %}"
+                     class="input py-3.5 {% if field.errors %}input-error{% endif %} {% if field.field.widget.input_type == 'password' %}pr-20{% endif %}">
+              {% if field.field.widget.input_type == 'password' %}
+                <button type="button" data-toggle-password="{{ field.id_for_label }}" aria-label="Tampilkan password"
+                        class="absolute inset-y-0 right-0 px-4 text-sm text-muted transition hover:text-white">Tampilkan</button>
+              {% endif %}
+            </div>
+            {% for error in field.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-brand mt-4 w-full py-3.5 text-base">{% block auth_submit %}{% endblock %} <span aria-hidden="true">&rarr;</span></button>
+      </form>
+
+      <p class="mt-8 text-center text-sm text-body">{% block auth_switch %}{% endblock %}</p>
+    </div>
+  </div>
+
+  <div class="relative hidden p-4 lg:block">
+    <div class="relative h-full overflow-hidden rounded-[32px]">
+      <img src="{% static 'images/hero-aerial-bg.jpg' %}" alt="Lahan pertanian dilihat dari udara" class="absolute inset-0 h-full w-full object-cover">
+      <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></div>
+      <div class="absolute inset-x-0 bottom-0 p-10">
+        <p class="font-display text-3xl leading-tight font-semibold text-white">Growing The<br>Future of Agriculture</p>
+        <p class="mt-3 max-w-sm text-sm text-white/80">Komunitas, marketplace, dan peta kebun urban dalam satu tempat.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('[data-toggle-password]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      const input = document.getElementById(button.dataset.togglePassword);
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      button.textContent = show ? 'Sembunyikan' : 'Tampilkan';
+      button.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+    });
+  });
+</script>
+{% endblock %}

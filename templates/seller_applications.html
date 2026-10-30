@@ -3,12 +3,12 @@
 {% block title %}Antrean pengajuan penjual | Urban Harvest Community{% endblock %}
 
 {% block content %}
-<section class="min-h-screen px-4 pt-40 pb-16">
-  <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+<section class="page page-narrow">
+  <div class="flex flex-col gap-6">
     {% include 'includes/messages.html' %}
 
     <div>
-      <h1 class="font-display text-3xl font-bold">Antrean pengajuan penjual</h1>
+      <h1 class="page-title text-3xl sm:text-4xl">Antrean pengajuan penjual</h1>
       <p class="mt-2 text-sm text-muted">{{ applications|length }} pengajuan menunggu tinjauan.</p>
     </div>
 

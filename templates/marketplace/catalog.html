@@ -11,7 +11,7 @@
 {% block content %}
 <section class="mx-auto {% if map_view %}max-w-[100rem]{% else %}max-w-7xl{% endif %} px-4 pt-32 pb-24 sm:px-6 lg:px-8">
   <header class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-    <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">Marketplace</h1>
+    <h1 class="page-title">Marketplace</h1>
     <div class="flex flex-wrap items-center gap-3 md:flex-nowrap">
       <nav class="flex rounded-full bg-white/5 p-1 ring-1 ring-white/10" aria-label="Tampilan">
         <a href="{{ list_url }}" class="rounded-full px-4 py-2 text-sm transition {% if not map_view %}bg-white font-medium text-ink{% else %}text-muted hover:text-white{% endif %}" {% if not map_view %}aria-current="page"{% endif %}>Daftar</a>

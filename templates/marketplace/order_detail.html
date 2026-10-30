@@ -15,7 +15,7 @@
 
   <div class="mt-4 flex flex-wrap items-end justify-between gap-4">
     <div>
-      <h1 class="text-4xl font-semibold tracking-tight">Pesanan #{{ order.pk }}</h1>
+      <h1 class="page-title">Pesanan #{{ order.pk }}</h1>
       <p class="mt-2 text-sm text-muted">
         {{ order.created_at|date:"d M Y, H:i" }} ·
         {% if is_seller_view %}Pembeli: {{ order.buyer.username }}{% else %}Toko: {% if order.seller %}<a href="{% url 'marketplace:seller_store' order.seller.username %}" class="text-white hover:underline">{{ order.seller.username }}</a>{% else %}-{% endif %}{% endif %}

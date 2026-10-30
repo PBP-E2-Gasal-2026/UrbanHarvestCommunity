@@ -1,39 +1,93 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Cari Produk dengan AI — Urban Harvest{% endblock %}
+{% block title %}AI Search | Urban Harvest Community{% endblock %}
+
+{# Halaman percakapan: tanpa footer supaya kotak input bisa menempel di bawah. #}
+{% block footer %}{% endblock %}
+
 {% block content %}
-<section class="max-w-5xl mx-auto px-5 pb-16 h-auto min-h-screen">
-    <div id="search-prompt-shell" class="min-h-screen flex flex-col justify-center pt-48 pb-16">
-        <div id="search-prompt-content" class="w-full">
-            <h1 class="text-3xl font-bold mb-3">Temukan hasil kebun untuk kebutuhanmu</h1>
-            <p class="text-white/70 mb-8">Ceritakan produk, harga per satuan, atau lokasi yang kamu cari. Hasil berasal dari marketplace Urban Harvest.</p>
-            <form id="llm-search-form" data-create-url="{% url 'llm_searching:create_job' %}" class="space-y-4">
-                {% csrf_token %}
-                <label for="search-prompt" class="block font-semibold">Apa yang kamu cari?</label>
-                <textarea
-                    id="search-prompt"
-                    name="prompt"
-                    required
-                    aria-describedby="search-prompt-limit search-word-count"
-                    rows="3"
-                    placeholder="Cari tomat di Depok di bawah Rp30.000 per kg"
-                    class="w-full rounded-xl bg-white/10 border border-white/20 p-4 h-20"></textarea>
-                <p id="search-prompt-limit" class="text-sm text-white/70">Maksimal 500 kata dan 5.000 karakter, termasuk spasi.</p>
-                <p id="search-word-count" class="text-sm text-right text-white/70" role="status" aria-live="polite" aria-atomic="true">0/500 kata</p>
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 rounded-full px-6 py-3 font-semibold disabled:opacity-50">Cari produk</button>
-            </form>
-        </div>
+<section id="ai-search" data-state="empty" class="group/ai mx-auto flex min-h-screen w-full max-w-3xl flex-col justify-center px-4 pt-28 pb-16 sm:px-6 data-[state=chat]:justify-start data-[state=chat]:pb-0">
+
+  {# Tampilan awal: judul di tengah (disembunyikan setelah ada percakapan) #}
+  <div class="pb-8 group-data-[state=chat]/ai:hidden">
+    <h1 class="text-center text-[32px] leading-tight font-semibold tracking-tighter text-white sm:text-[46px]">
+      Tanya. Temukan. Panen.
+    </h1>
+    <p class="mt-3 text-center text-lg text-muted sm:text-xl">Cari hasil kebun nyata di marketplace, cukup dengan bertanya.</p>
+  </div>
+
+  {# Percakapan #}
+  <div id="chat-log" class="hidden flex-1 flex-col gap-10 pb-10 group-data-[state=chat]/ai:flex" aria-live="polite"></div>
+
+  {# Kotak input: di tengah saat kosong, menempel di bawah saat percakapan berjalan #}
+  <div class="pb-6 group-data-[state=chat]/ai:sticky group-data-[state=chat]/ai:bottom-0 group-data-[state=chat]/ai:bg-gradient-to-t group-data-[state=chat]/ai:from-canvas group-data-[state=chat]/ai:from-70% group-data-[state=chat]/ai:to-transparent group-data-[state=chat]/ai:pt-6">
+    <form id="llm-search-form" data-create-url="{% url 'llm_searching:create_job' %}"
+          class="rounded-xl border border-line bg-surface p-2 transition-colors duration-200 focus-within:border-glass-border">
+      {% csrf_token %}
+      <label for="search-prompt" class="sr-only">Apa yang kamu cari?</label>
+      <textarea
+        id="search-prompt"
+        name="prompt"
+        required
+        aria-describedby="search-prompt-limit search-word-count"
+        rows="1"
+        placeholder="Tanya apa saja, misalnya: tomat di Depok di bawah Rp30.000 per kg"
+        class="block max-h-52 min-h-12 w-full resize-none bg-transparent px-2 pt-2 text-sm text-white placeholder:text-muted focus:outline-none"></textarea>
+      <div class="flex items-center gap-2 px-1">
+        <p id="search-word-count" class="text-xs text-white/70" role="status" aria-live="polite" aria-atomic="true">0/500 kata</p>
+        <p id="search-prompt-limit" class="sr-only">Maksimal 500 kata dan 5.000 karakter, termasuk spasi.</p>
+        <button type="submit" data-send class="ml-auto flex h-8 w-8 items-center justify-center rounded-md bg-white text-ink transition hover:bg-white-hover disabled:opacity-30" aria-label="Kirim pertanyaan" disabled>
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+      </div>
+    </form>
+
+    {# Saran (hanya di tampilan awal) #}
+    <div class="mt-4 flex flex-wrap justify-center gap-3 group-data-[state=chat]/ai:hidden" aria-label="Contoh pertanyaan">
+      <button type="button" data-example class="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm text-body transition hover:border-glass-border hover:text-white">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.1-6"/></svg>
+        <span>Sayur di bawah Rp20.000</span>
+      </button>
+      <button type="button" data-example class="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm text-body transition hover:border-glass-border hover:text-white">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22V12M12 12C12 8 9 5 4 5c0 4 3 7 8 7Zm0 0c0-3 2-6 7-6 0 3-2 6-7 6Z"/></svg>
+        <span>Bibit cabai yang masih ada stok</span>
+      </button>
+      <button type="button" data-example class="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm text-body transition hover:border-glass-border hover:text-white">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        <span>Kompos di sekitar Bogor</span>
+      </button>
+      <button type="button" data-example class="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm text-body transition hover:border-glass-border hover:text-white">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+        <span>Buah segar paling murah</span>
+      </button>
     </div>
-    <p id="search-status" role="status" aria-live="polite" class="mt-4 min-h-6 text-white/80"></p>
-    <section id="search-result" class="mt-6" hidden>
-        <h2 class="text-xl font-semibold">Hasil pencarian</h2>
-        <p id="search-filters" class="text-sm text-white/60 mt-2"></p>
-        <p id="search-explanation" class="whitespace-pre-line mt-4"></p>
-        <div id="search-products" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6"></div>
-    </section>
-    <p class="mt-8"><a href="/marketplace/" class="text-emerald-300 underline">Jelajahi marketplace</a></p>
-    <template id="product-card-template">{% include 'llm_searching/card.html' %}</template>
-    <noscript><p class="mt-6">Aktifkan JavaScript untuk pencarian AI, atau jelajahi marketplace melalui tautan di atas.</p></noscript>
+
+    <p class="mt-4 text-center text-xs text-muted">
+      Hasil selalu berasal dari produk nyata di <a href="{% url 'marketplace:catalog' %}" class="text-body underline-offset-4 hover:underline">marketplace</a>.
+    </p>
+  </div>
+
+  {# Cetakan satu giliran percakapan #}
+  <template id="turn-template">
+    <article class="flex flex-col gap-5">
+      <p data-user-message class="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-surface-2 px-4 py-2.5 text-[15px] leading-6 whitespace-pre-wrap text-white"></p>
+      <div class="flex flex-col gap-4">
+        <div data-thinking class="flex flex-col gap-2">
+          <button type="button" data-thinking-toggle disabled aria-expanded="false"
+                  class="flex w-fit items-center gap-1 text-sm text-muted enabled:cursor-pointer enabled:hover:text-white">
+            <span data-thinking-label class="thinking-shimmer">Berpikir</span>
+            <svg data-thinking-chevron class="hidden h-3 w-3 transition-transform duration-150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+          </button>
+          <ul data-thinking-content hidden class="ml-0.5 flex flex-col gap-1 border-l border-line pl-3 text-sm text-muted"></ul>
+        </div>
+        <p data-answer class="text-[15px] leading-7 whitespace-pre-line text-body"></p>
+        <div data-products class="grid grid-cols-1 gap-4 sm:grid-cols-2"></div>
+      </div>
+    </article>
+  </template>
+  <template id="product-card-template">{% include 'llm_searching/card.html' %}</template>
+  <noscript><p class="pb-6 text-center text-sm text-muted">Aktifkan JavaScript untuk pencarian AI, atau buka <a href="{% url 'marketplace:catalog' %}" class="link">marketplace</a>.</p></noscript>
 </section>
 {% endblock %}
+
 {% block extra_js %}<script src="{% static 'js/llm_search.js' %}" defer></script>{% endblock %}

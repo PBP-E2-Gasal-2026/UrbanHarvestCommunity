@@ -102,8 +102,11 @@
     {% if product.latitude and product.longitude %}
       <div id="pickup-map" data-lat="{{ product.latitude|stringformat:'s' }}" data-lng="{{ product.longitude|stringformat:'s' }}" data-label="{{ product.location }}"
            class="relative isolate z-0 mt-4 h-72 overflow-hidden rounded-3xl ring-1 ring-white/10"></div>
-      <a class="mt-3 inline-block text-sm text-brand-soft hover:underline" target="_blank" rel="noopener"
-         href="https://www.google.com/maps/dir/?api=1&destination={{ product.latitude|stringformat:'s' }},{{ product.longitude|stringformat:'s' }}">Petunjuk arah &rarr;</a>
+      <div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+        <a class="text-brand-soft hover:underline" href="{% url 'map_module:map' %}?product={{ product.pk }}">Lihat di Peta Kebun &rarr;</a>
+        <a class="text-brand-soft hover:underline" target="_blank" rel="noopener"
+           href="https://www.google.com/maps/dir/?api=1&destination={{ product.latitude|stringformat:'s' }},{{ product.longitude|stringformat:'s' }}">Petunjuk arah &rarr;</a>
+      </div>
     {% else %}
       <p class="mt-4 rounded-3xl bg-surface-2 px-5 py-4 text-sm text-muted">Penjual belum menandai titik di peta.</p>
     {% endif %}

@@ -1,39 +1,24 @@
 {% extends 'base.html' %}
 
-{% block title %}Tambah Komentar | Urban Harvest Community{% endblock %}
+{% block title %}{% if is_edit %}Edit{% else %}Tulis{% endif %} Komentar | Urban Harvest Community{% endblock %}
 
 {% block content %}
-<main class="min-h-screen bg-canvas px-4 py-10 text-white sm:px-6 lg:px-8">
-    <section class="mx-auto max-w-2xl">
-        <header class="mb-8">
-            <h1 class="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                {% if post %}Edit Komentar{% else %}Tambah Komentar{% endif %}
-            </h1>
-        </header>
-        
-        <form method="POST" class="card space-y-6 p-5 sm:p-7">
-            {% csrf_token %}
-            {% for error in field.errors %}
-                <p class="field-error">{{ error }}</p>
-            {% endfor %}
-            {% for field in form %}
-                <div class="field">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% for error in field.errors %}
-                    <p class="field-error">{{ error }}</p>
-                {% endfor %}
-                </div>
-            {% endfor %}
-            <div class="flex flex-wrap justify-end gap-3 border-t border-line pt-5">
-                <a href="{% url 'community_forum:show_community' %}" class="btn btn-secondary">Batal</a>
-                <button type="submit" class="btn btn-brand">
-                    {% if post %}Simpan perubahan{% else %}Tambah Komentar{% endif %}
-                </button>
-            </div>
-        </form>
-    </section>
-</main>
+<section class="page page-narrow">
+  <a href="{% url 'community_forum:show_community' %}{% if post %}#post-{{ post.id_post }}{% endif %}" class="back-link">&larr; Forum</a>
+  <h1 class="page-title mt-4">{% if is_edit %}Edit komentar{% else %}Tulis komentar{% endif %}</h1>
+  {% if post %}
+    <blockquote class="mt-6 rounded-2xl border-l-2 border-brand bg-surface-2/60 px-4 py-3 text-sm text-body">
+      <span class="font-semibold text-white">{{ post.creator.username }}:</span> {{ post.content|truncatewords:30 }}
+    </blockquote>
+  {% endif %}
 
-
+  <form method="post" class="mt-8 flex flex-col gap-6">
+    {% csrf_token %}
+    {% include 'includes/form_fields.html' %}
+    <div class="flex gap-3">
+      <button type="submit" class="btn btn-brand">{% if is_edit %}Simpan perubahan{% else %}Kirim komentar{% endif %}</button>
+      <a href="{% url 'community_forum:show_community' %}" class="btn btn-ghost">Batal</a>
+    </div>
+  </form>
+</section>
 {% endblock %}

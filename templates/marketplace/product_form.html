@@ -11,7 +11,7 @@
 {% block content %}
 <section class="mx-auto max-w-3xl px-4 pt-32 pb-32 sm:px-6">
   <a href="{% url 'marketplace:my_products' %}" class="text-sm text-muted hover:text-white">&larr; Produk saya</a>
-  <h1 class="mt-4 text-4xl font-semibold tracking-tight">{% if is_edit %}Edit produk{% else %}Tambah produk{% endif %}</h1>
+  <h1 class="page-title mt-4">{% if is_edit %}Edit produk{% else %}Tambah produk{% endif %}</h1>
   <p class="mt-2 text-sm text-muted">Kolom bertanda <span class="text-white">*</span> wajib diisi.</p>
 
   <form method="post" enctype="multipart/form-data" class="mt-10 flex flex-col gap-14" novalidate>
