@@ -1,7 +1,6 @@
 """Durable job state; transactions never span external HTTP requests."""
 
 import logging
-import math
 import uuid
 from datetime import timedelta
 
@@ -11,9 +10,10 @@ from django.db import transaction
 from django.db.models import F, Q
 from django.utils import timezone
 
-from .exceptions import QueueFull, RateLimited, SearchError
+from .exceptions import QueueFull, SearchError
 from .filters import validate_prompt
 from .models import SearchJob
+from .rate_limits import enforce_job_rate_limit
 
 logger = logging.getLogger(__name__)
 TERMINAL = ("succeeded", "needs_clarification", "failed")
@@ -25,20 +25,7 @@ def submit_job(user_id: int, prompt: str) -> SearchJob:
     with transaction.atomic():
         # This identity lock belongs to job admission, not marketplace searching.
         get_user_model().objects.select_for_update().get(pk=user_id)
-        now = timezone.now()
-        recent = SearchJob.objects.filter(
-            owner_id=user_id, created_at__gt=now - timedelta(seconds=60)
-        ).order_by("created_at")
-        if recent.count() >= 5:
-            retry_after = max(
-                1,
-                math.ceil(
-                    (
-                        recent.first().created_at + timedelta(seconds=60) - now
-                    ).total_seconds()
-                ),
-            )
-            raise RateLimited(retry_after)
+        enforce_job_rate_limit(user_id)
         if (
             SearchJob.objects.filter(owner_id=user_id, status__in=ACTIVE).count()
             >= settings.LLM_MAX_ACTIVE_JOBS
