@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     'authentication',
     'marketplace',
     'map_module',
+    'llm_searching',
 ]
 
 MIDDLEWARE = [
@@ -170,3 +172,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = 'authentication:login'
 
+# LLM credentials remain server-side.
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+
+if not OPENROUTER_API_KEY:
+    raise ImproperlyConfigured("OPENROUTER_API_KEY needs to be set in the environment variables for LLM functionality.")
+
+# Keep job deadlines longer than both bounded OpenRouter requests combined.
+LLM_MAX_ACTIVE_JOBS = int(os.getenv("LLM_MAX_ACTIVE_JOBS", "3"))
+LLM_LEASE_SECONDS = max(180, int(os.getenv("LLM_LEASE_SECONDS", "180")))
+
+LLM_RABBITMQ_URL = os.getenv("LLM_RABBITMQ_URL", "")
+LLM_WORKERS = max(1, min(16, int(os.getenv("LLM_WORKERS", "4"))))
