@@ -186,3 +186,6 @@ LLM_LEASE_SECONDS = max(180, int(os.getenv("LLM_LEASE_SECONDS", "180")))
 
 LLM_RABBITMQ_URL = os.getenv("LLM_RABBITMQ_URL", "")
 LLM_WORKERS = max(1, min(16, int(os.getenv("LLM_WORKERS", "4"))))
+# Tanpa RabbitMQ (mis. di PWS hanya proses web yang jalan), job diproses langsung
+# di thread web supaya pencarian tidak menunggu worker yang tidak pernah ada.
+LLM_INLINE_JOBS = os.getenv("LLM_INLINE_JOBS", "" if LLM_RABBITMQ_URL else "true").lower() == "true"

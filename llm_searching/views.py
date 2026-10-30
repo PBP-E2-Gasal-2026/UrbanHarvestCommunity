@@ -1,5 +1,9 @@
+import logging
+import threading
+
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.db import OperationalError
+from django.db import OperationalError, close_old_connections, transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -7,9 +11,12 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
 from .exceptions import InvalidSearch, QueueFull, RateLimited
-from .jobs import submit_job
+from .jobs import process_job, submit_job
 from .models import SearchJob
 from .openrouter import load_json
+from .service import SearchService
+
+logger = logging.getLogger(__name__)
 
 ERROR_MESSAGES = {
     "marketplace_unavailable": "Data marketplace belum tersedia. Silakan coba lagi nanti.",
@@ -18,6 +25,23 @@ ERROR_MESSAGES = {
     "unsafe_search": "Permintaan memuat operasi yang tidak diizinkan.",
     "search_failed": "Pencarian belum dapat diselesaikan. Silakan coba lagi.",
 }
+
+
+def _run_job_inline(job_id):
+    """Proses job di thread web bila tidak ada worker terpisah (mis. di PWS).
+
+    claim_job memakai lease atomik, jadi aman walau worker sungguhan ikut berjalan.
+    """
+    try:
+        process_job(job_id, SearchService())
+    except Exception:  # noqa: BLE001 - thread latar tidak boleh menjatuhkan proses web
+        logger.error("Inline LLM search job crashed", extra={"job_id": str(job_id)})
+    finally:
+        close_old_connections()
+
+
+def _start_inline_job(job_id):
+    threading.Thread(target=_run_job_inline, args=(job_id,), daemon=True).start()
 
 
 @login_required(login_url="authentication:login")
@@ -44,6 +68,8 @@ def create_job(request):
         if not isinstance(payload, dict) or set(payload) != {"prompt"}:
             raise InvalidSearch("Kirim satu field prompt.")
         job = submit_job(request.user.pk, payload["prompt"])
+        if settings.LLM_INLINE_JOBS:
+            transaction.on_commit(lambda: _start_inline_job(job.pk))
     except (ValueError, UnicodeError, InvalidSearch) as exc:
         message = str(exc) if isinstance(exc, InvalidSearch) else "JSON tidak valid."
         return JsonResponse(

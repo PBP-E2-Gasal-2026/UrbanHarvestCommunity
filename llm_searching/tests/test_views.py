@@ -1,11 +1,13 @@
 import json
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
 from authentication.models import Session
+from llm_searching import views
 from llm_searching.jobs import submit_job
 from llm_searching.models import SearchJob
 
@@ -156,3 +158,39 @@ class ViewsTests(TestCase):
         self.assertEqual(response.status_code, 429)
         self.assertEqual(response.json()["error_code"], "rate_limited")
         self.assertTrue(1 <= int(response["Retry-After"]) <= 60)
+
+
+class InlineJobTests(TestCase):
+    """Tanpa worker terpisah (PWS), job harus diproses langsung setelah dibuat."""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("inline", "inline@example.com", "Pass!1234")
+        ViewsTests.login_client(self, self.client)
+
+    def post(self):
+        return self.client.post(
+            "/llm-search/api/jobs/", json.dumps({"prompt": "tomat"}), content_type="application/json"
+        )
+
+    @override_settings(LLM_INLINE_JOBS=True)
+    def test_job_is_started_inline_after_commit(self):
+        with patch("llm_searching.views._start_inline_job") as start, self.captureOnCommitCallbacks(execute=True):
+            response = self.post()
+        self.assertEqual(response.status_code, 202)
+        start.assert_called_once_with(SearchJob.objects.get().pk)
+
+    @override_settings(LLM_INLINE_JOBS=False)
+    def test_job_waits_for_worker_when_inline_disabled(self):
+        with patch("llm_searching.views._start_inline_job") as start, self.captureOnCommitCallbacks(execute=True):
+            self.post()
+        start.assert_not_called()
+
+    def test_inline_runner_finishes_job(self):
+        job = submit_job(self.user.pk, "tomat")
+        service = type("Fake", (), {"run": lambda self, prompt: {
+            "status": "succeeded", "products": [], "filters": {}, "explanation": "ok", "degraded": False,
+        }})
+        with patch("llm_searching.views.SearchService", service):
+            views._run_job_inline(job.pk)
+        job.refresh_from_db()
+        self.assertEqual(job.status, "succeeded")

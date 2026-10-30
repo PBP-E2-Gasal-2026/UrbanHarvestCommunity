@@ -13,7 +13,7 @@
     const currency = new Intl.NumberFormat("id-ID");
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const POLL_DEADLINE_MS = 90000;
+    const POLL_DEADLINE_MS = 180000; // sama dengan LLM_LEASE_SECONDS
     let isSubmitting = false;
 
     // ---------- Validasi & penghitung kata ----------
