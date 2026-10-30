@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 
-from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -173,11 +172,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = 'authentication:login'
 
-# LLM credentials remain server-side.
+# LLM credentials remain server-side. Kalau kosong, aplikasi tetap berjalan;
+# hanya AI Search yang menampilkan pesan "belum dikonfigurasi" (lihat OpenRouterClient).
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-
-if not OPENROUTER_API_KEY:
-    raise ImproperlyConfigured("OPENROUTER_API_KEY needs to be set in the environment variables for LLM functionality.")
 
 # Keep job deadlines longer than both bounded OpenRouter requests combined.
 LLM_MAX_ACTIVE_JOBS = int(os.getenv("LLM_MAX_ACTIVE_JOBS", "3"))

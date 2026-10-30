@@ -169,6 +169,14 @@ class MapPageAndApiTests(TestCase):
         resp = self.client.get(reverse('map_module:map'), {'kind': 'nope', 'focus': 'abc', 'q': 'x' * 500})
         self.assertEqual(resp.status_code, 200)
 
+    def test_focused_location_kept_even_when_filtered_out(self):
+        resp = self.client.get(reverse('map_module:map'), {'kind': 'merchant', 'focus': self.garden.pk})
+        names = [loc['name'] for loc in resp.context['locations']]
+        self.assertEqual(names, ['Kebun Anggrek', 'Toko Tani'])
+        # Lokasi nonaktif tetap tidak bisa dimunculkan lewat ?focus=.
+        resp = self.client.get(reverse('map_module:map'), {'focus': self.hidden.pk})
+        self.assertNotContains(resp, 'Kebun Rahasia')
+
     def test_unicode_digits_and_huge_ids_do_not_crash(self):
         # '²'.isdigit() == True tetapi int('²') gagal: dulu memicu 500.
         for value in ('²', '٣', '9' * 40, '-1', '1.5'):

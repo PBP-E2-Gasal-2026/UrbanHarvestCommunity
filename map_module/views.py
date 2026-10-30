@@ -64,6 +64,12 @@ def map_page(request):
     locations = _filtered_locations(query, kinds)
 
     focus_id = _parse_id(request.GET.get('focus'))
+    # Lokasi yang difokuskan tetap ditampilkan walau tersaring filter jenis/teks,
+    # supaya tautan ?focus= tidak berujung pesan "lokasi tidak tersedia".
+    if focus_id is not None and all(loc.pk != focus_id for loc in locations):
+        focused = active_locations().filter(pk=focus_id).first()
+        if focused is not None:
+            locations.insert(0, focused)
 
     # ?product=<id>: buka titik pengambilan produk marketplace (PRD §5.5 butir 5).
     pin = None

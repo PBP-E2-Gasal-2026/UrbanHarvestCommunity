@@ -6,6 +6,7 @@ from django.core.exceptions import FieldDoesNotExist, FieldError
 from django.core.files.storage import default_storage
 from django.db import DatabaseError, models
 from django.db.models import Q
+from django.urls import NoReverseMatch, reverse
 
 from .exceptions import InvalidSearch, MarketplaceUnavailable
 
@@ -37,6 +38,13 @@ def safe_image_url(value):
     ):
         return value
     return ""
+
+
+def _product_url(product_id):
+    try:
+        return reverse("marketplace:product_detail", args=[product_id])
+    except NoReverseMatch:
+        return f"/marketplace/products/{product_id}/"
 
 
 class MarketplaceRepository:
@@ -157,7 +165,7 @@ class MarketplaceRepository:
                             "slug": row["category__slug"],
                         },
                         location=row["location"],
-                        url=f"/marketplace/products/{row['id']}/",
+                        url=_product_url(row["id"]),
                         is_available=row["stock"] > 0,
                     )
                 )

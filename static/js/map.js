@@ -190,7 +190,7 @@
   }
 
   function popupOptions() {
-    return { maxWidth: 320, minWidth: 288, closeButton: false, autoPanPadding: [24, 24] };
+    return { maxWidth: 320, minWidth: 288, closeButton: false, autoPanPadding: [24, 24], keepInView: true };
   }
 
   function render() {
@@ -428,7 +428,14 @@
   render();
   if (pin && state.productMarker) {
     map.setView([pin.lat, pin.lng], 16);
-    state.productMarker.openPopup();
+    // Buka popup setelah ukuran peta final, supaya autoPan menghitung batas yang benar
+    // (sebelumnya popup terpotong di tepi kanan).
+    map.whenReady(function () {
+      setTimeout(function () {
+        map.invalidateSize();
+        state.productMarker.openPopup();
+      }, 150);
+    });
   } else if (pin) {
     // Peta tidak termuat: tetap beri tahu di mana titik pengambilannya.
     setStatus('Titik pengambilan "' + pin.name + '": ' +

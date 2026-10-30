@@ -49,6 +49,7 @@ class LocationForm(forms.ModelForm):
         }
 
     def __init__(self, *args, user, **kwargs):
+        kwargs.setdefault('label_suffix', '')  # seragam dengan form modul lain (tanpa titik dua)
         super().__init__(*args, **kwargs)
         allowed = set(allowed_kinds(user))
         # Pada edit, jenis yang sudah ada tetap muncul agar form tidak rusak.
