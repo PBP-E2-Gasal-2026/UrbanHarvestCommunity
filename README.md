@@ -1,5 +1,19 @@
 # Urban Harvest Community
 
+## Kontributor
+
+Terima kasih kepada seluruh kontributor Urban Harvest Community:
+
+| Nama | Modul |
+| --- | --- |
+| Adrian Nathanael Setiawan | Searching LLM |
+| Khairani Hanifah Putri | Forum Komunitas |
+| Adriana Ainurrahmah Damanik | Marketplace Discovery |
+| Vania Apsari Nailah Putri Difa | Autentikasi & Pengguna |
+| Muhammad Wisnu Jaya Wardana | Peta Kebun |
+
+Riwayat kontribusi tersedia di [halaman kontributor GitHub](https://github.com/PBP-E2-Gasal-2026/UrbanHarvestCommunity/graphs/contributors).
+
 ## Tautan
 
 * **Deployment PWS:** https://adrian-nathanael-midterm-project.pws.cs.ui.ac.id
