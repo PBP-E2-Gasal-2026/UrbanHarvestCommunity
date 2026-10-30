@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
 
-from authentication.models import Role, Session, User
+from authentication.models import Merchant, Role, Session, User
 
 from .cart import (
     CartError,
@@ -221,7 +221,12 @@ class SeedCommandTests(TestCase):
         call_command('seed_marketplace', stdout=StringIO())
         self.assertEqual(Product.objects.count(), 18)
         for username in ('petani_penjual', 'kebun_sinta'):
-            self.assertTrue(is_seller(User.objects.get(username=username)))
+            user = User.objects.get(username=username)
+            self.assertTrue(is_seller(user))
+            self.assertTrue(user.roles.filter(name='farmer').exists())
+            self.assertTrue(Merchant.objects.filter(owner=user).exists())
+        buyer = User.objects.get(username='pembeli_demo')
+        self.assertTrue(buyer.roles.filter(name='farmer').exists())
         self.assertTrue(Product.objects.filter(seller__username='kebun_sinta').exists())
         self.assertFalse(Product.objects.filter(latitude__isnull=True).exists())
 
@@ -920,6 +925,24 @@ class ProductImageTests(MarketplaceTestCase):
         form = ProductForm(data=self._payload(), files={'image': big})
         self.assertFalse(form.is_valid())
         self.assertIn('image', form.errors)
+
+
+class MerchantIntegrationTests(MarketplaceTestCase):
+    def test_merchant_name_falls_back_to_username(self):
+        self.assertEqual(self.tomat.merchant_name, 'budi')
+
+    def test_merchant_name_used_on_card_store_and_detail(self):
+        self.seller.roles.add(Role.objects.create(name='farmer-seller', description='Penjual'))
+        Merchant.objects.create(owner=self.seller, name='Kebun Budi', description='Sayur organik dari Depok',
+                                contact='0812', show_contact=False)
+        tomat = Product.objects.select_related('seller__merchant').get(pk=self.tomat.pk)
+        self.assertEqual(tomat.merchant_name, 'Kebun Budi')
+        self.assertContains(self.client.get(reverse('marketplace:catalog'), {'q': 'tomat cherry'}), 'Kebun Budi')
+        self.assertContains(self.client.get(reverse('marketplace:product_detail', args=[tomat.pk])), 'Kebun Budi')
+        store = self.client.get(reverse('marketplace:seller_store', args=['budi']))
+        self.assertContains(store, 'Kebun Budi')
+        self.assertContains(store, 'Sayur organik dari Depok')
+        self.assertNotContains(store, '0812')  # kontak disembunyikan sesuai pilihan merchant
 
 
 class StarsTagTests(TestCase):

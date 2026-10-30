@@ -125,7 +125,7 @@ def _order(products, params):
 def search_products(raw_params):
     """Satu-satunya pintu query katalog, dipakai view katalog dan LLM Search."""
     params = clean_search_params(raw_params)
-    products = Product.objects.active().select_related('category', 'seller')
+    products = Product.objects.active().select_related('category', 'seller', 'seller__merchant')
     products = _apply_filters(products, params)
     return _order(products, params), params
 
@@ -143,7 +143,7 @@ def category_sections(limit=4):
     for category in Category.objects.order_by('name'):
         products = list(
             Product.objects.active().filter(category=category)
-            .select_related('category', 'seller').in_stock_first('-created_at')[:limit]
+            .select_related('category', 'seller', 'seller__merchant').in_stock_first('-created_at')[:limit]
         )
         if products:
             sections.append({'category': category, 'products': products})

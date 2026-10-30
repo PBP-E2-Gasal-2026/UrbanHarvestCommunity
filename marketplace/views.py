@@ -128,9 +128,9 @@ def catalog_view(request):
 @require_GET
 def product_detail_view(request, pk):
     product = get_object_or_404(
-        Product.objects.active().select_related('category', 'seller').with_stats(), pk=pk
+        Product.objects.active().select_related('category', 'seller', 'seller__merchant').with_stats(), pk=pk
     )
-    others = Product.objects.active().exclude(pk=product.pk).select_related('category', 'seller')
+    others = Product.objects.active().exclude(pk=product.pk).select_related('category', 'seller', 'seller__merchant')
     return render(request, 'marketplace/product_detail.html', {
         'product': product,
         'reviews': product.reviews.select_related('buyer')[:10],
@@ -157,6 +157,7 @@ def seller_store_view(request, username):
     if not is_seller(seller):
         raise Http404('Toko tidak ditemukan.')
 
+    merchant = getattr(seller, 'merchant', None)
     all_products = Product.objects.active().filter(seller=seller)
     stats = all_products.with_stats()
     rated = [p for p in stats if p.rating_count]
@@ -168,7 +169,7 @@ def seller_store_view(request, username):
     category = request.GET.get('category', '')
     sort = request.GET.get('sort') if request.GET.get('sort') in STORE_SORTS else 'popular'
 
-    products = stats.select_related('category', 'seller')
+    products = stats.select_related('category', 'seller', 'seller__merchant')
     if keyword:
         products = products.filter(name__icontains=keyword)
     if category:
@@ -194,6 +195,8 @@ def seller_store_view(request, username):
         'sort': sort,
         'sort_options': [(key, label) for key, (label, _) in STORE_SORTS.items()],
         'is_owner': request.user.is_authenticated and request.user.pk == seller.pk,
+        'merchant': merchant,
+        'store_name': merchant.name if merchant else seller.username,
     })
 
 
@@ -211,7 +214,7 @@ def search_api(request):
 @require_GET
 def product_api(request, pk):
     """Detail satu produk aktif dalam JSON, format sama dengan item di /api/search/."""
-    product = (Product.objects.active().select_related('category', 'seller')
+    product = (Product.objects.active().select_related('category', 'seller', 'seller__merchant')
                .prefetch_related('images').with_stats().filter(pk=pk).first())
     if product is None:
         return JsonResponse({'error': 'Produk tidak ditemukan.'}, status=404)

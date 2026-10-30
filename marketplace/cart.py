@@ -14,7 +14,7 @@ class CartError(Exception):
 
 def cart_items(user):
     return (CartItem.objects.filter(user=user)
-            .select_related('product', 'product__seller', 'product__category')
+            .select_related('product', 'product__seller', 'product__seller__merchant', 'product__category')
             .order_by('product__seller__username', '-added_at'))
 
 
@@ -31,6 +31,7 @@ def group_by_seller(items):
         seller_items = list(seller_items)
         groups.append({
             'seller': seller,
+            'name': seller_items[0].product.merchant_name,
             'items': seller_items,
             'all_selected': all(item.selected for item in seller_items),
             'subtotal': sum(item.subtotal for item in seller_items if item.selected),

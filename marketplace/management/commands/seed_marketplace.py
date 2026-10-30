@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 
-from authentication.models import Role, User
+from authentication.models import Merchant, Profile, Role, User
 from marketplace.models import Category, Product
 
 CATEGORIES = ['Sayuran', 'Buah', 'Bibit', 'Kompos', 'Media Tanam']
@@ -122,6 +122,12 @@ SELLERS = [
     ('kebun_sinta', 'sinta-123!', ('Bogor', 'Bekasi', 'Tangerang')),
 ]
 
+# Nama toko (model Merchant milik modul autentikasi) untuk akun penjual demo.
+MERCHANTS = [
+    ('petani_penjual', 'Kebun Urban Depok', 'Depok'),
+    ('kebun_sinta', 'Kebun Sinta Bogor', 'Bogor'),
+]
+
 
 class Command(BaseCommand):
     help = 'Mengisi kategori, produk, dan akun demo untuk marketplace'
@@ -140,15 +146,24 @@ class Command(BaseCommand):
         seller_role, _ = Role.objects.get_or_create(
             name='farmer-seller', defaults={'description': 'Petani - Penjual'}
         )
-        user_role, _ = Role.objects.get_or_create(
-            name='user', defaults={'description': 'Pengguna biasa'}
+        # Registrasi memberi peran 'farmer' (Petani), jadi akun demo mengikuti aturan yang sama.
+        farmer_role, _ = Role.objects.get_or_create(
+            name='farmer', defaults={'description': 'Petani'}
         )
         sellers = {
-            location: self._user(username, password, [seller_role, user_role])
+            location: self._user(username, password, [seller_role, farmer_role])
             for username, password, locations in SELLERS
             for location in locations
         }
-        self._user('pembeli_demo', 'pembeli-123!', [user_role])
+        buyer = self._user('pembeli_demo', 'pembeli-123!', [farmer_role])
+        for user in {*sellers.values(), buyer}:
+            Profile.objects.get_or_create(user=user)
+        for username, name, location in MERCHANTS:
+            Merchant.objects.get_or_create(
+                owner=User.objects.get(username=username),
+                defaults={'name': name, 'location': location,
+                          'description': f'Hasil kebun urban segar dari {location}.'},
+            )
 
         categories = {
             name: Category.objects.get_or_create(name=name, defaults={'slug': slugify(name)})[0]

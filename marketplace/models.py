@@ -115,7 +115,9 @@ class Product(models.Model):
 
     @property
     def merchant_name(self):
-        return self.seller.username
+        """Nama toko dari model Merchant (modul autentikasi); username bila belum dibuat."""
+        merchant = getattr(self.seller, 'merchant', None)
+        return merchant.name if merchant else self.seller.username
 
     @property
     def photo_url(self):
