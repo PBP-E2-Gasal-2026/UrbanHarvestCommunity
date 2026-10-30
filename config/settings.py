@@ -119,12 +119,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'authentication.validators.SpecialCharacterValidator',
     },
 ]
 
@@ -152,6 +156,9 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 WHITENOISE_USE_FINDERS = True
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Django 5 uses EMAIL_BACKEND; MAILERS is a Django 6 setting.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -162,3 +169,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = 'authentication:login'
+
