@@ -178,5 +178,5 @@ class MarketplaceTests(TransactionTestCase):
         result = SearchService(self.repo, client).run("sayuran segar di sekitar depok")
         self.assertEqual(result["status"], "succeeded")
         self.assertEqual([p["id"] for p in result["products"]], [self.tomato.pk])
-        self.assertEqual(result["filters"]["keyword"], "segar")
+        self.assertEqual(result["filters"]["keyword"], "")
         self.assertEqual(result["filters"]["location"], "Depok")

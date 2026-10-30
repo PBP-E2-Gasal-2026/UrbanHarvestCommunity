@@ -156,11 +156,9 @@ class WorkerTests(TransactionTestCase):
 
         queued = QueuedExecutor()
         self.worker.executor = queued
-        from django.test import override_settings
-
-        with override_settings(LLM_MAX_ACTIVE_JOBS=10):
-            for _ in range(6):
-                submit_job(self.user.pk, "tomat")
+        # Existing backlog may span several admission windows.
+        for _ in range(6):
+            SearchJob.objects.create(owner=self.user, prompt="tomat")
         self.worker.tick()
         self.assertEqual(len(self.worker.futures), 4)
         self.assertEqual(len(self.broker.queue), 4)

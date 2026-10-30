@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from django.test import SimpleTestCase
 
 from llm_searching.exceptions import InvalidSearch
@@ -6,10 +8,11 @@ from llm_searching.filters import (
     parse_filters,
     validate_prompt,
 )
+from llm_searching.service import SearchService
 
 
 class FiltersTests(SimpleTestCase):
-    def test_category_with_freshness_preserves_descriptor_and_location(self):
+    def test_category_with_freshness_keeps_location_without_requiring_descriptor(self):
         result = normalize_category_filters(
             parse_filters(
                 {
@@ -21,7 +24,7 @@ class FiltersTests(SimpleTestCase):
             ),
             ["sayuran", "buah"],
         )
-        self.assertEqual(result.keyword, "segar")
+        self.assertEqual(result.keyword, "")
         self.assertEqual(result.categories, ("sayuran",))
         self.assertEqual(result.location, "Depok")
         self.assertEqual(result.max_price, 30000)
@@ -158,3 +161,46 @@ class FiltersTests(SimpleTestCase):
         ):
             with self.subTest(payload=payload), self.assertRaises(InvalidSearch):
                 parse_filters(payload)
+
+    def interpreted_filters(self, prompt, payload):
+        repository = Mock()
+        repository.category_slugs.return_value = ["sayuran", "buah", "bibit"]
+        repository.search.return_value = []
+        client = Mock()
+        client.extract.return_value = {
+            "status": "search",
+            "filters": payload,
+            "clarification": "",
+            "unsupported_conditions": [],
+        }
+        result = SearchService(repository, client).run(prompt)
+        return result["filters"]
+
+    def test_general_recommendations_are_category_searches_by_best_price(self):
+        for prompt, keyword, category in (
+            ("rekomendasikan sayur kepada saya", "sayur", "sayuran"),
+            ("rekomendasikan buah kepada saya", "buah", "buah"),
+            (
+                "rekomendasikan buah buahan segar kepada saya",
+                "buah buahan segar",
+                "buah",
+            ),
+            ("rekomendasikan bibit terbaik", "bibit terbaik", "bibit"),
+        ):
+            with self.subTest(prompt=prompt):
+                filters = self.interpreted_filters(prompt, {"keyword": keyword})
+                self.assertEqual(filters["categories"], [category])
+                self.assertEqual(filters["keyword"], "")
+                self.assertEqual(filters["sort"], "price_asc")
+
+    def test_recommendations_preserve_explicit_order_and_specific_product(self):
+        filters = self.interpreted_filters(
+            "rekomendasikan bibit tomat termahal",
+            {"keyword": "bibit tomat", "sort": "price_desc"},
+        )
+        self.assertEqual(filters["keyword"], "bibit tomat")
+        self.assertEqual(filters["sort"], "price_desc")
+        filters = self.interpreted_filters(
+            "rekomendasikan tomat terbaru", {"keyword": "tomat"}
+        )
+        self.assertEqual(filters["sort"], "newest")

@@ -1,12 +1,12 @@
 from datetime import timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from llm_searching.exceptions import MarketplaceUnavailable, QueueFull
+from llm_searching.exceptions import MarketplaceUnavailable, QueueFull, SearchError
 from llm_searching.jobs import claim_job, finish_job, process_job, submit_job
 from llm_searching.models import SearchJob
 
@@ -79,3 +79,39 @@ class JobsTests(TestCase):
         call_command("cleanup_llm_jobs", verbosity=0)
         self.assertFalse(SearchJob.objects.filter(pk=job.pk).exists())
         self.assertTrue(SearchJob.objects.filter(pk=active.pk).exists())
+
+    def test_five_jobs_per_rolling_minute_including_finished_jobs(self):
+        for _ in range(5):
+            job = submit_job(self.user.pk, "tomat")
+            SearchJob.objects.filter(pk=job.pk).update(status="succeeded")
+        with self.assertRaises(SearchError) as error:
+            submit_job(self.user.pk, "tomat")
+        self.assertEqual(error.exception.code, "rate_limited")
+        self.assertTrue(1 <= error.exception.retry_after <= 60)
+        other = get_user_model().objects.create_user(
+            "other", "other@example.com", password="Pass!1234"
+        )
+        self.assertIsNotNone(submit_job(other.pk, "tomat"))
+        SearchJob.objects.filter(owner=self.user).update(
+            created_at=timezone.now() - timedelta(seconds=61)
+        )
+        self.assertIsNotNone(submit_job(self.user.pk, "tomat"))
+
+    def test_rolling_window_expiry_and_retry_after(self):
+        now = timezone.now()
+        for seconds_ago in (50, 40, 30, 20, 10):
+            job = SearchJob.objects.create(
+                owner=self.user, prompt="tomat", status="succeeded"
+            )
+            SearchJob.objects.filter(pk=job.pk).update(
+                created_at=now - timedelta(seconds=seconds_ago)
+            )
+        with patch("llm_searching.jobs.timezone.now", return_value=now):
+            with self.assertRaises(SearchError) as error:
+                submit_job(self.user.pk, "tomat")
+            self.assertEqual(error.exception.code, "rate_limited")
+            self.assertEqual(error.exception.retry_after, 10)
+        with patch(
+            "llm_searching.jobs.timezone.now", return_value=now + timedelta(seconds=10)
+        ):
+            self.assertIsNotNone(submit_job(self.user.pk, "tomat"))
