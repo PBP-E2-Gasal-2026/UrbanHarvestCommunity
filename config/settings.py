@@ -34,6 +34,11 @@ DEBUG = not PRODUCTION
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "adrian-nathanael-midterm-project.pws.cs.ui.ac.id"]
 CSRF_TRUSTED_ORIGINS = ["https://adrian-nathanael-midterm-project.pws.cs.ui.ac.id"]
 
+# Tile OpenStreetMap menolak (403) permintaan tanpa header Referer. Bawaan Django
+# "same-origin" tidak mengirim Referer ke domain lain, jadi peta jadi "Access blocked".
+# Kebijakan ini hanya mengirim origin (tanpa path/query) ke domain lain.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 
 
 
@@ -57,7 +62,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

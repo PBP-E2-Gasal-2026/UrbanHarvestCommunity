@@ -169,6 +169,11 @@ class MapPageAndApiTests(TestCase):
         resp = self.client.get(reverse('map_module:map'), {'kind': 'nope', 'focus': 'abc', 'q': 'x' * 500})
         self.assertEqual(resp.status_code, 200)
 
+    def test_referrer_policy_lets_osm_tiles_load(self):
+        # OSM memblokir tile tanpa Referer; "same-origin" membuat peta 403 di PWS.
+        resp = self.client.get(reverse('map_module:map'))
+        self.assertEqual(resp['Referrer-Policy'], 'strict-origin-when-cross-origin')
+
     def test_focused_location_kept_even_when_filtered_out(self):
         resp = self.client.get(reverse('map_module:map'), {'kind': 'merchant', 'focus': self.garden.pk})
         names = [loc['name'] for loc in resp.context['locations']]
