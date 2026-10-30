@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Toko {{ seller.username }} | Urban Harvest Community{% endblock %}
+
+{% block footer %}{% include 'marketplace/_footer_compact.html' %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl px-4 pt-32 pb-24 sm:px-6 lg:px-8">
+  <a href="{% url 'marketplace:catalog' %}" class="text-sm text-muted hover:text-white">&larr; Marketplace</a>
+
+  <header class="mt-8 flex flex-col gap-8 border-b border-line pb-10 md:flex-row md:items-end md:justify-between">
+    <div class="flex items-center gap-5">
+      <span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/10 text-2xl font-semibold">{{ seller.username|first|upper }}</span>
+      <div>
+        <h1 class="text-4xl font-semibold tracking-tight">{{ seller.username }}</h1>
+        <p class="mt-1 text-sm text-muted">{% if main_location %}{{ main_location }} · {% endif %}Bergabung {{ seller.created_at|date:"M Y" }}</p>
+      </div>
+    </div>
+
+    <dl class="flex flex-wrap items-baseline gap-x-8 gap-y-3 text-sm">
+      <div class="flex items-baseline gap-1.5">
+        <dt class="order-last text-muted">{% if rating_count %}{{ rating_count }} ulasan{% else %}belum ada ulasan{% endif %}</dt><dd class="text-lg font-semibold tracking-tight">{% if rating_count %}<span class="text-warning">&#9733;</span> {{ rating_avg|floatformat:1 }}{% else %}–{% endif %}</dd>
+      </div>
+      <div class="flex items-baseline gap-1.5"><dt class="order-last text-muted">terjual</dt><dd class="text-lg font-semibold tracking-tight tabular-nums">{{ sold_total }}</dd></div>
+      <div class="flex items-baseline gap-1.5"><dt class="order-last text-muted">produk</dt><dd class="text-lg font-semibold tracking-tight tabular-nums">{{ product_count }}</dd></div>
+      {% if is_owner %}
+        <div class="flex gap-4">
+          <a href="{% url 'marketplace:sales' %}" class="text-muted transition hover:text-white">Pesanan masuk</a>
+          <a href="{% url 'marketplace:my_products' %}" class="text-brand-soft hover:underline">Kelola produk</a>
+        </div>
+      {% endif %}
+    </dl>
+  </header>
+
+  <form method="get" class="mt-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <nav class="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none]" aria-label="Kategori toko">
+      <a href="?{% if keyword %}q={{ keyword|urlencode }}&{% endif %}sort={{ sort }}"
+         class="shrink-0 rounded-full px-4 py-2 text-sm transition {% if not category %}bg-white font-medium text-ink{% else %}text-muted hover:text-white{% endif %}">Semua</a>
+      {% for item in store_categories %}
+        <a href="?category={{ item.slug }}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}&sort={{ sort }}"
+           class="shrink-0 rounded-full px-4 py-2 text-sm transition {% if category == item.slug %}bg-white font-medium text-ink{% else %}text-muted hover:text-white{% endif %}">{{ item.name }}</a>
+      {% endfor %}
+    </nav>
+    <div class="flex gap-3">
+      {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+      <input type="search" name="q" value="{{ keyword }}" placeholder="Cari di toko ini" aria-label="Cari di toko ini"
+             class="w-full rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none md:w-56">
+      <select name="sort" aria-label="Urutkan" data-auto-submit
+              class="appearance-none rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/25 focus:outline-none">
+        {% for value, label in sort_options %}
+          <option value="{{ value }}" {% if sort == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+      {% for product in page_obj %}{% include 'marketplace/_product_card.html' %}{% endfor %}
+    </div>
+  {% else %}
+    <p class="py-24 text-center text-muted">{% if keyword or category %}Tidak ada produk yang cocok di toko ini.{% else %}Toko ini belum punya produk.{% endif %}</p>
+  {% endif %}
+
+  {% if page_obj.has_other_pages %}
+    <nav class="mt-14 flex items-center justify-center gap-6 text-sm" aria-label="Halaman">
+      {% if page_obj.has_previous %}<a class="text-muted hover:text-white" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">&larr; Sebelumnya</a>{% endif %}
+      <span class="text-muted">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a class="text-muted hover:text-white" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Berikutnya &rarr;</a>{% endif %}
+    </nav>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% include 'marketplace/_card_scripts.html' %}
+<script>
+  document.querySelectorAll('select[data-auto-submit]').forEach(function (select) {
+    select.addEventListener('change', () => select.form.submit());
+  });
+</script>
+{% endblock %}

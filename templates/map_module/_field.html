@@ -1,0 +1,9 @@
+{# Satu field form dengan label, galat per field, dan teks bantuan (Design System: .field). #}
+<div class="field {% if field.errors %}field-has-error{% endif %}">
+    {{ field.label_tag }}
+    {{ field }}
+    {% for error in field.errors %}
+        <p class="field-error" role="alert">{{ error }}</p>
+    {% endfor %}
+    {% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}
+</div>

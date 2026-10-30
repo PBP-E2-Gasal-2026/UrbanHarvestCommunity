@@ -472,7 +472,7 @@ Hasil interpretasi dapat berbentuk parameter seperti:
 
 ```json
 {
-  "category": "sayuran",
+  "categories": ["sayuran"],
   "max_price": 20000
 }
 ```
@@ -488,8 +488,8 @@ Informasi yang dapat diambil dari prompt antara lain:
 * Harga maksimum.
 * Harga minimum.
 * Lokasi.
-* Jumlah produk.
-* Preferensi lainnya.
+* Batas jumlah hasil (`limit`).
+* Preferensi lain yang didukung filter pencarian.
 
 Contoh:
 
@@ -499,7 +499,7 @@ Dapat diterjemahkan menjadi:
 
 ```json
 {
-  "product": "bibit cabai",
+  "keyword": "bibit cabai",
   "max_price": 25000
 }
 ```
@@ -508,7 +508,7 @@ Dapat diterjemahkan menjadi:
 
 LLM tidak berfungsi sebagai sumber data marketplace.
 
-LLM hanya menginterpretasikan permintaan.
+LLM menafsirkan permintaan dan menyusun suggestion hanya dari kandidat yang diberikan backend.
 
 Data hasil pencarian harus berasal dari database aplikasi.
 
@@ -516,7 +516,7 @@ Hal ini penting untuk menghindari kasus ketika LLM memberikan rekomendasi produk
 
 ### Result Display
 
-Setelah query database selesai, hasil ditampilkan menggunakan komponen marketplace yang sama dengan pencarian reguler.
+Setelah query database selesai, hasil ditampilkan sebagai kartu produk yang mengambil data dari marketplace dan mengarah ke halaman detail produk.
 
 Contohnya:
 
@@ -538,11 +538,12 @@ Marketplace UI
 
 ### Fallback
 
-Apabila LLM gagal memahami permintaan pengguna, sistem dapat:
+* Permintaan ambigu, syarat yang belum didukung, atau hasil kosong meminta pengguna memperjelas pencarian.
+* Jika OpenRouter gagal saat interpretasi, sistem menampilkan pesan aman dan menyediakan tautan untuk menjelajahi marketplace.
+* Jika hanya tahap suggestion yang gagal, hasil query tetap ditampilkan dengan penjelasan berdasarkan data produk.
+* Jika RabbitMQ tidak tersedia, coordinator memproses job melalui satu worker lokal dan mencoba menghubungkan broker kembali.
 
-* Memberikan pesan bahwa pencarian tidak dapat dipahami.
-* Menggunakan keyword dari prompt sebagai pencarian biasa.
-* Meminta pengguna memperjelas kebutuhan.
+Panduan implementasi, setup, contoh prompt, dan API tersedia pada [Dokumentasi Modul Searching LLM](#dokumentasi-modul-searching-llm).
 
 ---
 
@@ -767,7 +768,7 @@ Dashboard admin dapat menampilkan informasi seperti:
 | ------------------------- | -------- | ------ | ---------------- | ----- |
 | Melihat Marketplace       | ✅        | ✅      | ✅                | ✅     |
 | Search Produk             | ✅        | ✅      | ✅                | ✅     |
-| LLM Search                | Terbatas | ✅      | ✅                | ✅     |
+| LLM Search                | ❌        | ✅      | ✅                | ✅     |
 | Membaca Forum             | ✅        | ✅      | ✅                | ✅     |
 | Membuat Post              | ❌        | ✅      | ✅                | ✅     |
 | Like Post                 | ❌        | ✅      | ✅                | ✅     |
@@ -839,6 +840,131 @@ Tanggung jawab utama:
 * Fallback apabila model gagal memahami query.
 * Menampilkan hasil pencarian dalam UI marketplace.
 
+### Dokumentasi Modul Searching LLM
+
+Kode modul berada di `llm_searching/`, template di `templates/llm_searching/`, dan interaksi halaman di `static/js/llm_search.js`. Pengguna **wajib login** untuk mengakses `/llm-search/` dan API job pencarian. Modul menggunakan **OpenRouter** dengan model **`google/gemma-3-27b-it:free`** untuk menerjemahkan bahasa natural menjadi filter terstruktur dan menyusun suggestion dari kandidat yang ditemukan.
+
+#### Fitur yang tersedia
+
+* **Pencarian bahasa natural:** nama produk, kategori, harga minimum/maksimum, lokasi, stok, jumlah hasil, serta urutan terbaru/harga termurah/harga tertinggi. Nama produk saja, seperti “carikan saya tomat”, sudah cukup; pengguna tidak wajib mengisi seluruh filter.
+* **Pencarian kategori dan rekomendasi:** “sayuran termurah” menjadi kategori `sayuran` dengan `price_asc`. Backend mempertahankan urutan harga dari database agar suggestion tidak membalik urutan atau menghilangkan kandidat termurah.
+* **Normalisasi bahasa:** menangani typo ringan yang jelas, variasi kapitalisasi, dan bentuk kategori seperti “buah buahan”. Keyword kategori yang redundan dihapus sebelum query, sementara nama spesifik seperti “buah naga” tetap dipertahankan.
+* **Pemisahan kategori dan sifat produk:** “sayuran segar di sekitar depok” menjadi kategori `sayuran`, keyword `segar`, dan lokasi Depok. Kata “segar” dicocokkan pada nama/deskripsi; ini tidak membuktikan tanggal panen atau menjamin kualitas yang tidak diverifikasi.
+* **Hasil berdasarkan katalog nyata:** kartu menampilkan foto, nama, harga/satuan, stok, kategori, lokasi, dan tautan `/marketplace/products/<id>/`. Produk arsip dikecualikan; stok nol diberi label Habis kecuali filter hanya-stok-tersedia diminta.
+* **Status job tanpa reload:** halaman mempoll status setiap 2 detik. Status tampil dekat tombol pencarian; kartu bertambah ke bawah dan tinggi section mengikuti isi, sementara posisi area prompt tetap stabil.
+* **Worker dengan pemulihan:** job disimpan di database, diproses paralel melalui RabbitMQ ketika broker sehat, dan beralih ke pemrosesan lokal serial saat broker tidak tersedia.
+
+#### Env dan Script yang berkaitan dengan Modul
+
+Buat atau perbarui `.env` dengan mengacu pada `.env.example`. Isi API key **sebelum menjalankan perintah Django**, karena konfigurasi aplikasi memeriksa keberadaannya saat startup:
+
+```dotenv
+OPENROUTER_API_KEY=isi_dengan_api_key_anda # strict env
+LLM_RABBITMQ_URL= # optional env
+LLM_WORKERS=4
+LLM_MAX_ACTIVE_JOBS=3
+LLM_LEASE_SECONDS=180
+```
+
+Di terminal terpisah, jalankan worker:
+
+```bash
+source .venv/bin/activate
+python manage.py run_llm_worker
+```
+
+Kemudian login melalui `/auth/login/` dan buka `/llm-search/`. **Worker tetap wajib berjalan ketika RabbitMQ tidak digunakan** agar job diproses. Jalankan satu proses coordinator per deployment; pool thread dikelola di dalam proses tersebut. Hentikan dengan `Ctrl+C`, lalu jalankan kembali setelah mengubah kode atau instruksi prompt. Untuk pengembangan tampilan, jalankan `npm run watch:css` di terminal lain.
+
+#### Contoh prompt
+
+| Prompt | Interpretasi yang diharapkan |
+| --- | --- |
+| `carikan saya tomat` | Keyword `tomat`, tanpa mengarang kategori, harga, atau lokasi |
+| `cari tomat di Depok di bawah 30 ribu` | Keyword `tomat`, lokasi Depok, harga maksimum Rp30.000 |
+| `rekomendasikan sayuran kepada saya dengan harga termurah` | Kategori `sayuran`, keyword kosong, urutan harga naik |
+| `carikan saya buah buahan dibawah 70 roibu` | Kategori `buah`, keyword kosong, harga maksimum Rp70.000 |
+| `tolong cariin tomta di dpok maksimal 30 ribu` | Normalisasi typo menjadi keyword `tomat`, lokasi Depok, batas harga tetap Rp30.000 |
+| `sayuran segar di sekitar depok` | Kategori `sayuran`, keyword `segar`, lokasi Depok; kapitalisasi `Depok` tidak mengubah interpretasi |
+| `cari tomat 3 kg dengan total maksimal Rp50.000` | Meminta klarifikasi karena perhitungan total anggaran berdasarkan berat belum didukung |
+
+Harga filter selalu mengacu pada **harga tercantum per satuan produk**. Kata “murah” menentukan pengurutan, bukan menambahkan anggaran buatan. Koreksi typo hanya untuk maksud yang cukup jelas; model tetap dapat meminta klarifikasi ketika terdapat beberapa tafsir.
+
+#### Alur pemrosesan dan keamanan
+
+```text
+Prompt pengguna login → job pending → worker
+    → OpenRouter: ekstraksi filter JSON
+    → validasi dan normalisasi backend
+    → SELECT produk/kategori marketplace
+    → suggestion dari kandidat hasil query
+    → simpan hasil/status → polling browser → kartu produk
+```
+
+Adapter `llm_searching/marketplace.py` membaca model `Product` dan `Category` lokal sesuai [kontrak marketplace](llm_searching/docs/api_contract.pdf). Model tidak menghasilkan SQL yang dieksekusi langsung dan tidak menerima seluruh katalog untuk difilter. Jalur query pencarian memakai proyeksi field eksplisit, tanpa membaca tabel akun, transaksi, atau ulasan; nama merchant belum ditampilkan pada kartu LLM.
+
+Backend memvalidasi nama field, tipe, rentang harga, kategori, sort, dan limit. ID suggestion harus berasal dari kandidat database dan alasannya harus didukung fakta produk. API menggunakan sesi login, CSRF untuk POST, pemeriksaan pemilik job, dan rendering teks yang di-escape. Kredensial tetap di server.
+
+#### Konfigurasi dan worker
+
+| Variabel/batas | Default | Keterangan |
+| --- | --- | --- |
+| `OPENROUTER_API_KEY` | Wajib diisi | Kunci server untuk OpenRouter |
+| `LLM_RABBITMQ_URL` | Kosong | Kosong memakai fallback lokal; isi URL AMQP untuk menggunakan RabbitMQ |
+| `LLM_WORKERS` | 4 | Thread paralel saat broker sehat; dibatasi 1–16 |
+| `LLM_MAX_ACTIVE_JOBS` | 3 | Maksimum job pending/processing per pengguna |
+| `LLM_LEASE_SECONDS` | 180 detik | Minimum 180 detik; token dan expiry memagari penyimpanan hasil |
+| Panjang prompt | Maksimum 500 kata dan 5.000 karakter termasuk spasi | Penghitung kata dan pesan validasi pada textarea serta validasi backend; request JSON maksimum 12.000 byte |
+| Jumlah hasil | Default 20, maksimum 50 | Dibatasi sebelum mengambil hasil database |
+
+Pada SQLite, gunakan `LLM_WORKERS=1` bila memakai broker untuk mengurangi konflik writer; PostgreSQL lebih sesuai untuk concurrency produksi. RabbitMQ memakai antrean durable dan pesan berisi ID job. Jika broker mati, coordinator menunggu pekerjaan paralel yang sedang berjalan selesai, kemudian memproses job secara serial. Reconnect memakai backoff dan pool dipulihkan otomatis saat broker kembali sehat.
+
+Job terminal tidak diproses ulang; token lease mencegah worker lama menimpa hasil. Crash setelah panggilan OpenRouter tetapi sebelum hasil disimpan masih dapat menyebabkan panggilan API ulang. Untuk memeriksa satu siklus worker, gunakan `python manage.py run_llm_worker --once`.
+
+#### Halaman dan API
+
+| Method | URL | Hasil |
+| --- | --- | --- |
+| GET | `/llm-search/` | Halaman pencarian; Guest diarahkan login |
+| POST | `/llm-search/api/jobs/` | JSON `{"prompt":"carikan saya tomat"}` dengan CSRF; respons 202 berisi `id`, `status`, dan `status_url` |
+| GET | `/llm-search/api/jobs/<uuid>/` | Status/hasil job milik pengguna yang sedang login |
+
+Status job: `pending`, `processing`, `succeeded`, `needs_clarification`, atau `failed`. Hasil terminal memuat filter, produk, penjelasan, dan penanda `degraded`. API mengembalikan 400 untuk input salah, 401 untuk Guest, 403 untuk CSRF, 404 untuk job yang tidak tersedia/bukan milik pengguna, dan 429 jika kuota job aktif tercapai.
+
+#### Fallback dan batasan
+
+* Hasil kosong atau syarat di luar kemampuan meminta klarifikasi; sistem tidak diam-diam menghapus syarat atau melonggarkan harga/lokasi.
+* Total harga berdasarkan jumlah/berat, tanggal panen, pengecualian, OR kompleks, dan pencarian radius/jarak terdekat belum didukung. “Sekitar Depok” memakai filter teks lokasi, bukan perhitungan GPS.
+* Kegagalan interpretasi OpenRouter menghasilkan pesan aman dan tautan marketplace. Kegagalan tahap suggestion tetap menampilkan hasil query beserta penjelasan berdasarkan data, dengan `degraded=true`.
+* Dependency marketplace yang belum tersedia atau tidak sesuai kontrak menghasilkan `marketplace_unavailable`, bukan dianggap hasil kosong.
+* Job menyimpan prompt dan hasil untuk pemrosesan/polling. Jadwalkan `python manage.py cleanup_llm_jobs` untuk menghapus job terminal yang selesai lebih dari 24 jam lalu; job aktif tidak dihapus oleh command ini.
+
+#### Pengujian dan dokumentasi lanjutan
+
+```bash
+python manage.py test llm_searching
+python manage.py check
+ruff check . --exclude migrations
+```
+
+Tes mencakup validasi filter, pembatasan query baca, grounding suggestion, urutan harga, akses dan CSRF, lease job, broker/fallback, deadline provider, serta render template. Tes PostgreSQL khusus concurrency dilewati pada SQLite. Evaluasi prompt terhadap model asli bersifat opt-in dan memakai kuota OpenRouter:
+
+```bash
+LLM_RUN_LIVE_TESTS=1 python manage.py test llm_searching.tests.test_live_prompts
+```
+
+Runbook, kontrak adapter, serta detail operasional tersedia di [docs/llm-search.md](docs/llm-search.md). Desain, plan, dan bukti pengerjaan tersimpan di [docs/superpowers](docs/superpowers/).
+
+## AI Disclosure
+Saya menggunakan llm untuk membatu saya dalam membatu saya menulis code dan membentuk prompt engineering dalam mengirimkan request ke llm pencarian. tujuan prompt engineeringnya adalam memastikan bahwa LLM yang digunakan tidak menjawab sesuatu yang berada di luar context marketplace searching.
+
+Sebelum llm mulai menulis code, saya membuatkan dokumen spec dan juga execution plan sehingga llm tidak bekerja dengan contract yang mengada-ada. AI yang menulis code ini juga melakukan pengerjaan dengan flow tdd dengan evidence red commit, green commit, dan refactor commit.
+
+perbaikan manual dilakukan untuk bagian design searching page yang designnya terlalu generic dan sulit dibaca, serta ux dan interaksi dengan pengguna yang sangat minim.
+
+Seperti saat assignment, AI memang sangat membantu dalam pengerjaan backend, tetapi masih perlu perbaikan manual dalam pengerjaan UI.
+
+Model yang digunakan: GPT-6.1-Sol (medium)
+
 ---
 
 ## 2. Khairani Hanifah Putri — 2506587371
@@ -875,6 +1001,104 @@ Tanggung jawab utama:
 * Data stok.
 * Integrasi marketplace dengan merchant.
 * Menyediakan endpoint/data yang dibutuhkan modul LLM Search.
+
+### Dokumentasi Modul Marketplace
+
+Kode modul berada di app `marketplace/` dengan template di `templates/marketplace/`. Tampilan memakai design system tim (`static/css/input.css`).
+
+#### Menjalankan dengan data contoh
+
+```bash
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_marketplace
+npm run build:css
+python manage.py runserver
+```
+
+`seed_marketplace` mengisi 5 kategori, 18 produk dengan foto contoh dari Wikimedia Commons (lisensi terbuka, kredit tercantum di file seed), serta akun demo lokal berikut:
+
+| Peran | Username | Password |
+| --- | --- | --- |
+| Petani - Penjual | `petani_penjual` | `petani-123!` |
+| Petani - Penjual | `kebun_sinta` | `sinta-123!` |
+| Pembeli | `pembeli_demo` | `pembeli-123!` |
+
+#### Model data
+
+| Model | Field utama |
+| --- | --- |
+| `Category` | `name`, `slug`, `description` |
+| `Product` | `seller` (FK ke `User`), `category`, `name`, `description`, `image`, `image_url`, `price` (Rupiah per satuan), `unit`, `stock`, `min_order`, `harvested_at`, `location`, `pickup_address`, `pickup_notes`, `latitude`, `longitude`, `is_active`, `created_at`, `updated_at` |
+| `ProductImage` | `product`, `image`, `position` (maksimal 4 foto tambahan per produk) |
+| `CartItem` | `user`, `product`, `quantity`, `selected` |
+| `Order` | `buyer`, `seller`, `status`, `note`, `cancel_reason`, `total`, `created_at`, `updated_at` |
+| `OrderItem` | `order`, `product`, `product_name`, `price`, `quantity`, `pickup_location` (salinan saat checkout) |
+| `Review` | `order_item`, `product`, `buyer`, `rating` (1–5), `comment` |
+
+#### Halaman
+
+| URL | Akses | Fungsi |
+| --- | --- | --- |
+| `/marketplace/` | Publik | Katalog: cari, filter kategori (bisa lebih dari satu), harga, lokasi, stok, urutan, mode **Daftar / Peta** |
+| `/marketplace/products/<id>/` | Publik | Detail produk: galeri, harga per satuan, rating, terjual, peta titik ambil, ulasan, produk terkait |
+| `/marketplace/sellers/<username>/` | Publik | Halaman toko: rating, terjual, cari dan urutkan di dalam toko |
+| `/marketplace/my-products/` | Petani - Penjual | Kelola produk: tambah, edit, arsipkan, tampilkan lagi, hapus permanen |
+| `/marketplace/products/new/`, `/products/<id>/edit/` | Petani - Penjual (pemilik) | Form produk dengan foto, harga per satuan, minimal beli, dan titik pengambilan di peta |
+| `/marketplace/cart/` | Login | Keranjang per toko, pilih item, checkout |
+| `/marketplace/orders/` | Login | Pesanan saya dan detail pesanan |
+| `/marketplace/sales/` | Petani - Penjual | Pesanan masuk |
+
+#### API JSON (untuk modul LLM Search dan Peta)
+
+| Endpoint | Keterangan |
+| --- | --- |
+| `GET /marketplace/api/search/` | Pencarian produk aktif. Parameter: `q`/`keyword`, `category` (slug atau nama, bisa berulang), `price_range` (`under-10k`, `10k-25k`, `25k-50k`, `over-50k`), `min_price`, `max_price`, `location`, `in_stock`, `sort` (`relevance`, `newest`, `price_asc`, `price_desc`), `limit` (maks. 50). Mengembalikan `params`, `count`, `results` |
+| `GET /marketplace/api/products/<id>/` | Detail satu produk aktif: field yang sama dengan item pencarian, ditambah `url`, `gallery`, `pickup_address`, `pickup_notes`, `harvested_at`, `sold_count`, `rating_avg`, `rating_count`. Produk tidak ada atau diarsipkan menghasilkan `404` |
+
+Seluruh hasil berasal dari database katalog (grounded). Parameter yang tidak valid diabaikan, bukan menimbulkan error. Fungsi yang sama tersedia untuk dipanggil langsung dari Python: `marketplace.services.search_products(params)`.
+
+#### Alur pesanan
+
+1. Pembeli menambahkan produk ke keranjang (jumlah mengikuti stok dan minimal pembelian) atau memakai **Beli sekarang**.
+2. Checkout membuat **satu pesanan per penjual** dan mengurangi stok secara atomik.
+3. Penjual: **Menunggu konfirmasi → Disiapkan → Siap diambil → Selesai**. Penjual dapat menolak pesanan selama belum siap diambil.
+4. Pembeli dapat membatalkan selama pesanan belum dikonfirmasi, dan menekan **Pesanan diterima** saat siap diambil.
+5. Setelah selesai, pembeli dapat memberi ulasan satu kali per produk. Pembatalan mengembalikan stok.
+
+Pembayaran dilakukan saat pengambilan; pembayaran online berada di luar scope awal.
+
+#### Hak akses
+
+* Guest dapat melihat katalog, detail, dan halaman toko.
+* Pengguna login dapat membeli, melihat pesanannya, dan memberi ulasan.
+* Hanya `Petani - Penjual` (dan admin) yang dapat mengelola produk, dan hanya produk miliknya.
+* Penjual tidak dapat membeli produknya sendiri. Pesanan hanya dapat dilihat dan diubah oleh pembeli dan penjualnya.
+
+#### Layanan eksternal
+
+* Peta: Leaflet dengan tile OpenStreetMap dan citra satelit Esri.
+* Pencarian alamat dan pengisian alamat otomatis: Nominatim (OpenStreetMap).
+
+#### Pengujian
+
+```bash
+python manage.py test marketplace
+```
+
+#### Ketergantungan dengan modul lain
+
+* **Autentikasi (Vania):** `Product.seller` sementara merujuk ke `User`. Setelah model `Merchant` tersedia, nama toko dan etalase akan memakai data merchant.
+* **Peta Kebun (Wisnu):** produk menyimpan `latitude`/`longitude`. Urutan berdasarkan jarak terdekat menunggu layanan jarak dari modul peta.
+* **LLM Search (Adrian):** memakai adapter baca `llm_searching/marketplace.py` untuk mencari model produk/kategori lokal sesuai kontrak marketplace, sehingga hasil tetap berasal dari katalog.
+
+#### Catatan deployment
+
+Foto yang diunggah disimpan di `media/` dan hanya disajikan otomatis saat `DEBUG=True`. Untuk lingkungan produksi diperlukan penyimpanan media terpisah; sementara itu produk dapat memakai URL foto.
+
+#### AI Disclosure
+
+Dalam pengerjaan modul ini saya menggunakan asisten AI untuk membantu menganalisis alur marketplace, menyusun rancangan, menulis sebagian kode dan pengujian, serta meninjau tampilan. Seluruh hasil telah saya periksa, jalankan, uji, dan sesuaikan dengan kebutuhan proyek, dan saya bertanggung jawab atas kode yang dikumpulkan.
 
 ---
 
@@ -1051,3 +1275,9 @@ Forum membangun interaksi antarpengguna, marketplace membantu distribusi hasil p
 Fitur **LLM Search** menjadi nilai tambah aplikasi karena memungkinkan pengguna mencari komoditas menggunakan bahasa sehari-hari tanpa harus memahami struktur filter marketplace.
 
 Arsitektur fitur dibuat modular sehingga setiap anggota dapat mengembangkan modul secara terpisah, tetapi tetap terhubung melalui kontrak data dan API yang disepakati bersama.
+
+## Implementasi LLM Search
+
+Panduan fitur, setup, worker, contoh prompt, API, dan pengujian tersedia pada
+[Dokumentasi Modul Searching LLM](#dokumentasi-modul-searching-llm) di bagian modul
+Adrian. Runbook detail tersedia di [docs/llm-search.md](docs/llm-search.md).

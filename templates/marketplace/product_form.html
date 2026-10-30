@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Tambah{% endif %} Produk | Urban Harvest Community{% endblock %}
+
+{% block meta %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+{% endblock %}
+
+{% block footer %}{% include 'marketplace/_footer_compact.html' %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-3xl px-4 pt-32 pb-32 sm:px-6">
+  <a href="{% url 'marketplace:my_products' %}" class="text-sm text-muted hover:text-white">&larr; Produk saya</a>
+  <h1 class="mt-4 text-4xl font-semibold tracking-tight">{% if is_edit %}Edit produk{% else %}Tambah produk{% endif %}</h1>
+  <p class="mt-2 text-sm text-muted">Kolom bertanda <span class="text-white">*</span> wajib diisi.</p>
+
+  <form method="post" enctype="multipart/form-data" class="mt-10 flex flex-col gap-14" novalidate>
+    {% csrf_token %}
+    {% if form.errors %}
+      <div class="rounded-2xl bg-danger-tint px-4 py-3 text-sm text-danger" role="alert">
+        Periksa kembali kolom yang ditandai merah.
+        {% for error in form.non_field_errors %}<p class="mt-1">{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    {{ form.latitude }}{{ form.longitude }}
+
+    {# ---------- Foto ---------- #}
+    <fieldset class="flex flex-col gap-5">
+      <legend class="mb-1 text-xl font-semibold tracking-tight">Foto produk <span class="text-muted">*</span></legend>
+      <p class="mt-1 text-sm text-muted">Foto utama tampil di katalog. Tambah hingga 4 foto lain dari sudut berbeda. JPG, PNG, atau WebP, maks. 2 MB.</p>
+
+      <div class="flex flex-col gap-6 sm:flex-row">
+        <div class="flex flex-col gap-3">
+          <label for="{{ form.image.id_for_label }}" class="relative flex aspect-square w-44 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-dashed {% if form.image.errors %}border-danger-border{% else %}border-white/20{% endif %} bg-white/5 text-sm text-muted transition hover:border-white/40">
+            <img data-photo-preview src="{% if product.photo_url %}{{ product.photo_url }}{% endif %}" alt="" class="absolute inset-0 h-full w-full object-cover {% if not product.photo_url %}hidden{% endif %}">
+            <span class="flex flex-col items-center gap-1"><span class="text-2xl">+</span>Foto utama</span>
+          </label>
+          <input type="file" name="{{ form.image.html_name }}" id="{{ form.image.id_for_label }}" accept="image/jpeg,image/png,image/webp" class="sr-only">
+          {% if product.image %}
+            <label class="flex items-center gap-2 text-xs text-muted"><input type="checkbox" name="{{ form.image.html_name }}-clear" class="control"> Hapus foto utama</label>
+          {% endif %}
+          {% for error in form.image.errors %}<p class="field-error max-w-44" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="flex flex-1 flex-col gap-4">
+          <div class="flex flex-wrap gap-3" data-extra-previews>
+            {% for extra in product.images.all %}
+              <label class="relative h-20 w-20 overflow-hidden rounded-2xl bg-white/5">
+                <img src="{{ extra.image.url }}" alt="" class="h-full w-full object-cover">
+                <span class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/60 py-0.5 text-[10px]">
+                  <input type="checkbox" name="remove_images" value="{{ extra.pk }}" class="control h-3 w-3"> Hapus
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+          <div class="field {% if form.extra_images.errors %}field-has-error{% endif %}">
+            <label for="{{ form.extra_images.id_for_label }}">{{ form.extra_images.label }}</label>
+            <input type="file" name="extra_images" id="{{ form.extra_images.id_for_label }}" multiple accept="image/jpeg,image/png,image/webp"
+                   class="block w-full text-sm text-muted file:mr-4 file:cursor-pointer file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-white/20">
+            {% for error in form.extra_images.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+          </div>
+          {% include 'marketplace/_form_field.html' with field=form.image_url %}
+        </div>
+      </div>
+    </fieldset>
+
+    {# ---------- Informasi ---------- #}
+    <fieldset class="flex flex-col gap-5">
+      <legend class="mb-1 text-xl font-semibold tracking-tight">Informasi produk</legend>
+      {% include 'marketplace/_form_field.html' with field=form.name required=True counter=100 %}
+      {% include 'marketplace/_form_field.html' with field=form.category required=True %}
+      {% include 'marketplace/_form_field.html' with field=form.description required=True counter_min=20 help='Minimal 20 karakter. Jelaskan kondisi, cara tanam, dan keunggulan produk.' %}
+    </fieldset>
+
+    {# ---------- Harga & stok ---------- #}
+    <fieldset class="flex flex-col gap-5">
+      <legend class="mb-1 text-xl font-semibold tracking-tight">Harga &amp; stok</legend>
+      <div class="grid gap-5 sm:grid-cols-[1fr_10rem]">
+        {% include 'marketplace/_form_field.html' with field=form.price required=True help='Harga untuk satu satuan.' %}
+        {% include 'marketplace/_form_field.html' with field=form.unit required=True %}
+      </div>
+      <div class="grid gap-5 sm:grid-cols-3">
+        {% include 'marketplace/_form_field.html' with field=form.stock required=True %}
+        {% include 'marketplace/_form_field.html' with field=form.min_order required=True %}
+        {% include 'marketplace/_form_field.html' with field=form.harvested_at %}
+      </div>
+    </fieldset>
+
+    {# ---------- Pengambilan ---------- #}
+    <fieldset class="flex flex-col gap-5">
+      <legend class="mb-1 text-xl font-semibold tracking-tight">Titik pengambilan</legend>
+      <p class="mt-1 text-sm text-muted">Pembeli mengambil pesanan di titik ini. Cari alamat atau klik peta untuk menandai.</p>
+
+      <div class="flex gap-2">
+        <input type="search" data-geo-query placeholder="Cari alamat, contoh: Jl. Margonda Depok" aria-label="Cari alamat"
+               class="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none">
+        <button type="button" data-geo-search class="rounded-full border border-white/15 px-4 text-sm transition hover:bg-white/10">Cari</button>
+        <button type="button" data-use-my-location class="rounded-full border border-white/15 px-4 text-sm transition hover:bg-white/10">Lokasiku</button>
+      </div>
+      <ul data-geo-results class="hidden flex-col overflow-hidden rounded-2xl bg-surface-2 text-sm ring-1 ring-white/10"></ul>
+
+      <div id="location-picker" class="relative isolate z-0 h-80 overflow-hidden rounded-3xl ring-1 {% if form.latitude.errors %}ring-danger-border{% else %}ring-white/10{% endif %}"></div>
+      <p data-location-status class="-mt-3 text-xs {% if form.latitude.errors %}text-danger{% else %}text-muted{% endif %}" aria-live="polite">
+        {% if form.latitude.errors %}{{ form.latitude.errors.0 }}{% elif form.latitude.value %}Titik dipilih: {{ form.latitude.value }}, {{ form.longitude.value }}{% else %}Belum ada titik dipilih.{% endif %}
+      </p>
+
+      <div class="grid gap-5 sm:grid-cols-[14rem_1fr]">
+        {% include 'marketplace/_form_field.html' with field=form.location required=True %}
+        {% include 'marketplace/_form_field.html' with field=form.pickup_address required=True %}
+      </div>
+      {% include 'marketplace/_form_field.html' with field=form.pickup_notes %}
+    </fieldset>
+
+    <label class="flex cursor-pointer items-center justify-between gap-3 border-t border-line pt-8 text-sm text-body">
+      <span>
+        <span class="block text-white">{{ form.is_active.label }}</span>
+        <span class="text-xs text-muted">Matikan untuk menyimpan sebagai arsip tanpa ditampilkan.</span>
+      </span>
+      <input type="checkbox" name="{{ form.is_active.html_name }}" class="peer sr-only" {% if form.is_active.value %}checked{% endif %}>
+      <span class="relative h-6 w-10 shrink-0 rounded-full bg-white/15 transition peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-focus after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4" aria-hidden="true"></span>
+    </label>
+
+    <div class="sticky bottom-4 z-10 flex gap-3 rounded-full bg-canvas/80 p-2 ring-1 ring-white/10 backdrop-blur-xl">
+      <button type="submit" class="flex-1 rounded-full bg-white px-6 py-3 text-sm font-medium text-ink transition hover:bg-white-hover">{% if is_edit %}Simpan perubahan{% else %}Simpan &amp; tampilkan{% endif %}</button>
+      <a href="{% url 'marketplace:my_products' %}" class="rounded-full px-6 py-3 text-sm text-muted transition hover:text-white">Batal</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  (function () {
+    // ---------- Pratinjau foto ----------
+    const fileInput = document.querySelector('input[type="file"][name="image"]');
+    const urlInput = document.querySelector('input[name="image_url"]');
+    const preview = document.querySelector('[data-photo-preview]');
+    const extraInput = document.querySelector('input[name="extra_images"]');
+    const extraPreviews = document.querySelector('[data-extra-previews]');
+
+    function showPreview(src) {
+      preview.src = src || '';
+      preview.classList.toggle('hidden', !src);
+    }
+    fileInput.addEventListener('change', () => fileInput.files[0] && showPreview(URL.createObjectURL(fileInput.files[0])));
+    urlInput.addEventListener('change', () => !fileInput.files.length && showPreview(urlInput.value.trim()));
+    extraInput.addEventListener('change', function () {
+      extraPreviews.querySelectorAll('[data-new]').forEach((el) => el.remove());
+      [...extraInput.files].slice(0, 4).forEach(function (file) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.dataset.new = '';
+        img.className = 'h-20 w-20 rounded-2xl object-cover ring-1 ring-white/10';
+        extraPreviews.appendChild(img);
+      });
+    });
+
+    // ---------- Penghitung karakter ----------
+    document.querySelectorAll('[data-counter]').forEach(function (counter) {
+      const input = document.getElementById(counter.dataset.counter);
+      const max = Number(counter.dataset.max || 0);
+      const min = Number(counter.dataset.min || 0);
+      function update() {
+        const length = input.value.trim().length;
+        counter.textContent = max ? `${length}/${max}` : `${length} karakter${length < min ? ` (min. ${min})` : ''}`;
+        counter.classList.toggle('text-danger', min && length < min && length > 0);
+      }
+      input.addEventListener('input', update);
+      update();
+    });
+
+    // ---------- Peta titik pengambilan ----------
+    const latInput = document.querySelector('input[name="latitude"]');
+    const lngInput = document.querySelector('input[name="longitude"]');
+    const locationInput = document.querySelector('input[name="location"]');
+    const addressInput = document.querySelector('input[name="pickup_address"]');
+    const status = document.querySelector('[data-location-status]');
+    const results = document.querySelector('[data-geo-results]');
+    const query = document.querySelector('[data-geo-query]');
+    if (!window.L) return;
+
+    const hasPoint = latInput.value && lngInput.value;
+    const map = L.map('location-picker', { scrollWheelZoom: false })
+      .setView(hasPoint ? [latInput.value, lngInput.value] : [-6.3, 106.82], hasPoint ? 16 : 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap',
+    }).addTo(map);
+    let marker = null;
+
+    function placeMarker(lat, lng) {
+      if (marker) marker.setLatLng([lat, lng]);
+      else {
+        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        marker.on('dragend', () => setPoint(marker.getLatLng().lat, marker.getLatLng().lng, true));
+      }
+    }
+    if (hasPoint) placeMarker(latInput.value, lngInput.value);
+
+    const NOMINATIM = 'https://nominatim.openstreetmap.org';
+
+    async function reverseGeocode(lat, lng) {
+      try {
+        const response = await fetch(`${NOMINATIM}/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=id`);
+        const data = await response.json();
+        const a = data.address || {};
+        const area = [a.suburb || a.village || a.city_district, a.city || a.town || a.county || a.state]
+          .filter(Boolean).join(', ');
+        if (area && !locationInput.value.trim()) locationInput.value = area;
+        if (data.display_name && !addressInput.value.trim()) {
+          addressInput.value = data.display_name.split(',').slice(0, 4).join(',').trim();
+        }
+      } catch (error) {
+        // Pengisian alamat otomatis hanya bantuan; abaikan jika layanan tidak tersedia.
+      }
+    }
+
+    function setPoint(lat, lng, lookup) {
+      latInput.value = Number(lat).toFixed(6);
+      lngInput.value = Number(lng).toFixed(6);
+      placeMarker(lat, lng);
+      status.classList.remove('text-danger');
+      status.classList.add('text-muted');
+      status.textContent = `Titik dipilih: ${latInput.value}, ${lngInput.value}. Geser pin untuk menyesuaikan.`;
+      if (lookup) reverseGeocode(lat, lng);
+    }
+
+    map.on('click', (event) => setPoint(event.latlng.lat, event.latlng.lng, true));
+
+    async function searchAddress() {
+      const text = query.value.trim();
+      if (text.length < 3) return;
+      results.innerHTML = '<li class="px-4 py-3 text-muted">Mencari...</li>';
+      results.classList.replace('hidden', 'flex');
+      try {
+        const response = await fetch(`${NOMINATIM}/search?format=jsonv2&countrycodes=id&limit=5&accept-language=id&q=${encodeURIComponent(text)}`);
+        const places = await response.json();
+        results.innerHTML = '';
+        if (!places.length) {
+          results.innerHTML = '<li class="px-4 py-3 text-muted">Alamat tidak ditemukan. Coba klik langsung di peta.</li>';
+          return;
+        }
+        places.forEach(function (place) {
+          const item = document.createElement('li');
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'w-full px-4 py-3 text-left transition hover:bg-white/10';
+          button.textContent = place.display_name;
+          button.addEventListener('click', function () {
+            setPoint(place.lat, place.lon, true);
+            map.setView([place.lat, place.lon], 17);
+            results.classList.replace('flex', 'hidden');
+          });
+          item.appendChild(button);
+          results.appendChild(item);
+        });
+      } catch (error) {
+        results.innerHTML = '<li class="px-4 py-3 text-muted">Pencarian tidak tersedia. Klik langsung di peta.</li>';
+      }
+    }
+
+    document.querySelector('[data-geo-search]').addEventListener('click', searchAddress);
+    query.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        searchAddress();
+      }
+    });
+
+    document.querySelector('[data-use-my-location]').addEventListener('click', function () {
+      if (!navigator.geolocation) {
+        status.textContent = 'Browser tidak mendukung lokasi.';
+        return;
+      }
+      status.textContent = 'Mencari lokasimu...';
+      navigator.geolocation.getCurrentPosition(
+        function (position) {
+          setPoint(position.coords.latitude, position.coords.longitude, true);
+          map.setView([position.coords.latitude, position.coords.longitude], 17);
+        },
+        () => (status.textContent = 'Izin lokasi ditolak atau tidak tersedia.'),
+        { enableHighAccuracy: true, timeout: 10000 },
+      );
+    });
+  })();
+</script>
+{% endblock %}

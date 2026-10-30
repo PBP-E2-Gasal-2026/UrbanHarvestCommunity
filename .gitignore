@@ -5,3 +5,8 @@ __pycache__/
 db.sqlite3
 node_modules/
 staticfiles/
+media/
+
+# Shared dependency symlinks in managed worktrees
+/.venv
+/node_modules

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Antrean pengajuan penjual | Urban Harvest Community{% endblock %}
+
+{% block content %}
+<section class="min-h-screen px-4 pt-40 pb-16">
+  <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    {% include 'includes/messages.html' %}
+
+    <div>
+      <h1 class="font-display text-3xl font-bold">Antrean pengajuan penjual</h1>
+      <p class="mt-2 text-sm text-muted">{{ applications|length }} pengajuan menunggu tinjauan.</p>
+    </div>
+
+    {% for application in applications %}
+      <article class="card p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <a href="{% url 'authentication:profile' application.applicant.username %}" class="link text-lg">
+            {{ application.applicant.username }}
+          </a>
+          <span class="badge badge-warning">{{ application.get_status_display }}</span>
+        </div>
+        <p class="mt-1 text-sm text-muted">
+          {{ application.applicant.email }} · diajukan {{ application.created_at|date:"d M Y, H:i" }}
+        </p>
+
+        <form method="post" action="{% url 'authentication:seller_application_review' application.pk %}" class="mt-6 flex flex-col gap-4">
+          {% csrf_token %}
+          <div class="field">
+            <label for="note-{{ application.pk }}">Catatan untuk pemohon (opsional)</label>
+            <textarea id="note-{{ application.pk }}" name="admin_note" rows="3"></textarea>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button type="submit" name="decision" value="approved" class="btn btn-brand">Setujui</button>
+            <button type="submit" name="decision" value="rejected" class="btn btn-danger">Tolak</button>
+          </div>
+        </form>
+      </article>
+    {% empty %}
+      <article class="card p-6">
+        <p class="text-body">Tidak ada pengajuan yang menunggu. Semua sudah ditinjau.</p>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

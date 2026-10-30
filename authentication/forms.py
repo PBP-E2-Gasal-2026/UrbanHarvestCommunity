@@ -3,8 +3,32 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import User
+from .models import Profile, User, SellerApplication, Merchant
 
+MAX_PHOTO_SIZE = 2 * 1024 * 1024
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['photo','bio', 'location', 'community']
+        labels = {
+            'photo': 'Foto profil',
+            'bio': 'Bio',
+            'location': 'Lokasi',
+            'community': 'Komunitas',
+        }
+        help_texts = {
+            'photo': 'Foto berupa gambar, maksimal 2 MB.',
+        }
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo and photo.size > MAX_PHOTO_SIZE:
+            raise forms.ValidationError('Ukuran foto maksimal 2 MB')
+        return photo
 
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=100, label='Username')
@@ -21,7 +45,7 @@ class LoginForm(forms.Form):
         password = data.get('password')
         if username and password:
             user = authenticate(self.request, username=username, password=password)
-            if user is None or not user.roles.filter(name='user').exists():
+            if user is None or not (user.is_superuser or user.roles.exists()):
                 raise forms.ValidationError('Username atau password tidak valid.')
             self.user = user
         return data
@@ -38,6 +62,8 @@ class RegistrationForm(forms.Form):
 
     def clean_username(self):
         username = self.cleaned_data['username'].strip()
+        if username.lower() in {'edit'}:
+            raise forms.ValidationError('Username ini tidak dapat digunakan.')
         if User.objects.filter(username__iexact=username).exists():
             raise forms.ValidationError('Username sudah digunakan.')
         return username
@@ -61,3 +87,29 @@ class RegistrationForm(forms.Form):
             except ValidationError as error:
                 self.add_error('password', error)
         return data
+
+class SellerReviewForm(forms.Form):
+    decision = forms.ChoiceField(choices=[
+        (SellerApplication.Status.APPROVED, 'Setujui'),
+        (SellerApplication.Status.REJECTED, 'Tolak'),
+    ])
+    admin_note = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
+
+
+class MerchantForm(forms.ModelForm):
+    class Meta:
+        model = Merchant
+        fields = ['name', 'description', 'location', 'show_location', 'contact', 'show_contact']
+        labels = {
+            'name': 'Nama merchant',
+            'description': 'Deskripsi',
+            'location': 'Lokasi',
+            'show_location': 'Tampilkan lokasi ke publik',
+            'contact': 'Kontak',
+            'show_contact': 'Tampilkan kontak ke publik',
+        }
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'show_location': forms.CheckboxInput(attrs={'class': 'control'}),
+            'show_contact': forms.CheckboxInput(attrs={'class': 'control'}),
+        }

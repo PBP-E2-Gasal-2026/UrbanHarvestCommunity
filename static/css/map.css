@@ -1,0 +1,98 @@
+/*
+ * Gaya Leaflet untuk modul peta (map_module), menyesuaikan draf Figma "peta-kebun-desktop".
+ *
+ * Hanya menimpa elemen buatan Leaflet yang tidak bisa diberi class Tailwind. Warna diambil
+ * dari token design system lewat var(--color-*). Tailwind v4 hanya mengeluarkan variabel
+ * yang dipakai sebagai utility, jadi setiap token di bawah juga dipakai di
+ * templates/map_module/map.html (bg-surface, border-line, text-body, text-muted, bg-focus,
+ * bg-white, text-white, glass). Jangan menulis hex di sini; tambahkan token di input.css.
+ */
+
+/* Popup: kotak bawaan Leaflet dibuat transparan; isinya kartu gelap dari template. */
+.map-shell .leaflet-popup-content-wrapper {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+.map-shell .leaflet-popup-content {
+  margin: 0;
+  font: inherit;
+  line-height: inherit;
+}
+.map-shell .leaflet-popup-tip-container {
+  display: none;
+}
+
+/* Kontrol zoom (+ / −) gelap di kanan atas. */
+.map-shell .leaflet-bar {
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  box-shadow: none;
+  overflow: hidden;
+}
+.map-shell .leaflet-bar a,
+.map-shell .leaflet-bar a:hover {
+  background: var(--color-surface);
+  border-bottom-color: var(--color-line);
+  color: var(--color-white);
+  height: 40px;
+  line-height: 40px;
+  width: 40px;
+}
+.map-shell .leaflet-bar a:hover {
+  background: var(--color-glass-hover, var(--color-surface));
+}
+.map-shell .leaflet-bar a.leaflet-disabled {
+  color: var(--color-muted);
+}
+
+/* Atribusi wajib (OpenStreetMap) tetap terbaca tapi tidak mencolok. */
+.map-shell .leaflet-control-attribution {
+  background: transparent;
+  color: var(--color-muted);
+}
+.map-shell .leaflet-control-attribution a {
+  color: var(--color-body);
+}
+
+/* Lingkaran akurasi posisi pengguna. */
+.map-shell .map-accuracy {
+  fill: var(--color-focus);
+  fill-opacity: 0.12;
+  stroke: var(--color-focus);
+  stroke-opacity: 0.4;
+}
+
+/* Fokus keyboard pada marker. */
+.map-shell .leaflet-marker-icon:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Leaflet tidak berada di cascade layer, jadi selalu menang atas utility/komponen
+   Tailwind (yang berada di @layer). Bagian di bawah mengembalikan gaya design system. */
+.map-shell .leaflet-container {
+  background: var(--color-surface);
+  font: inherit;
+}
+.map-shell .leaflet-popup-content p {
+  margin: 0;
+}
+.map-shell .leaflet-popup-content a.link {
+  color: var(--color-brand-soft);
+}
+.map-shell .leaflet-popup-content a.btn-primary {
+  color: var(--color-ink);
+}
+.map-shell .leaflet-control-attribution {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Tile OpenStreetMap standar (terang) dibuat gelap agar serasi dengan draf Figma.
+   invert membalik terang/gelap; hue-rotate(180deg) mengembalikan rona (air tetap kebiruan,
+   taman tetap kehijauan); brightness/contrast/saturate meredam agar menyatu dengan surface. */
+.map-shell .map-tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(0.9) saturate(0.4);
+}

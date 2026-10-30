@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}Marketplace | Urban Harvest Community{% endblock %}
+
+{% block meta %}
+{% if map_view %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">{% endif %}
+{% endblock %}
+
+{% block footer %}{% if not map_view %}{% include 'marketplace/_footer_compact.html' %}{% endif %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto {% if map_view %}max-w-[100rem]{% else %}max-w-7xl{% endif %} px-4 pt-32 pb-24 sm:px-6 lg:px-8">
+  <header class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+    <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">Marketplace</h1>
+    <div class="flex flex-wrap items-center gap-3 md:flex-nowrap">
+      <nav class="flex rounded-full bg-white/5 p-1 ring-1 ring-white/10" aria-label="Tampilan">
+        <a href="{{ list_url }}" class="rounded-full px-4 py-2 text-sm transition {% if not map_view %}bg-white font-medium text-ink{% else %}text-muted hover:text-white{% endif %}" {% if not map_view %}aria-current="page"{% endif %}>Daftar</a>
+        <a href="{{ map_url }}" class="rounded-full px-4 py-2 text-sm transition {% if map_view %}bg-white font-medium text-ink{% else %}text-muted hover:text-white{% endif %}" {% if map_view %}aria-current="page"{% endif %}>Peta</a>
+      </nav>
+      <label class="relative min-w-0 flex-1 md:w-80 md:flex-none">
+        <span class="sr-only">Cari produk</span>
+        <svg class="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input form="catalog-filter" type="search" name="q" value="{{ params.keyword }}" placeholder="Cari produk"
+               class="w-full rounded-full border border-white/10 bg-white/5 py-3 pr-4 pl-11 text-sm text-white transition placeholder:text-muted focus:border-white/25 focus:bg-white/10 focus:outline-none">
+      </label>
+      <button type="button" data-open-filters class="rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm {% if not map_view %}lg:hidden{% endif %}">Filter{% if active_filters %} · {{ active_filters|length }}{% endif %}</button>
+    </div>
+  </header>
+
+  {% if is_seller %}
+    <div class="mt-4 flex gap-4 text-sm">
+      <a href="{% url 'marketplace:my_products' %}" class="text-muted transition hover:text-white">Produk saya</a>
+      <a href="{% url 'marketplace:product_create' %}" class="text-brand-soft hover:underline">+ Tambah produk</a>
+    </div>
+  {% endif %}
+
+  <div class="mt-10 grid gap-8 {% if map_view %}lg:grid-cols-2{% else %}lg:grid-cols-[13rem_1fr] lg:gap-12{% endif %}">
+    {% if map_view %}
+      <aside id="filter-panel" class="fixed inset-0 z-[1100] hidden overflow-y-auto bg-canvas px-6 pt-8 pb-28 sm:inset-y-0 sm:right-auto sm:left-0 sm:w-96 sm:border-r sm:border-line">
+    {% else %}
+      <aside id="filter-panel" class="fixed inset-0 z-[60] hidden overflow-y-auto bg-canvas px-6 pt-8 pb-28 lg:static lg:z-auto lg:block lg:overflow-visible lg:bg-transparent lg:p-0">
+    {% endif %}
+      <form id="catalog-filter" method="get" class="flex flex-col gap-10 {% if not map_view %}lg:sticky lg:top-28{% endif %}">
+        {% if map_view %}<input type="hidden" name="view" value="map">{% endif %}
+        <div class="flex items-center justify-between {% if not map_view %}lg:hidden{% endif %}">
+          <p class="text-xl font-semibold tracking-tight">Filter</p>
+          <button type="button" data-close-filters class="text-sm text-muted">Tutup</button>
+        </div>
+
+        <fieldset>
+          <legend class="mb-3 text-xs font-medium tracking-wide text-muted uppercase">Urutkan</legend>
+          <select name="sort" class="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:border-white/25 focus:outline-none">
+            {% for value, label in sort_options %}
+              <option value="{{ value }}" {% if params.sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </fieldset>
+
+        <fieldset>
+          <legend class="mb-3 text-xs font-medium tracking-wide text-muted uppercase">Kategori</legend>
+          <div class="flex flex-col gap-2.5">
+            {% for category in categories %}
+              <label class="flex cursor-pointer items-center gap-3 text-sm text-body transition hover:text-white">
+                <input type="checkbox" name="category" value="{{ category.slug }}" class="control"
+                       {% if category.slug in params.categories %}checked{% endif %}>
+                <span class="flex-1">{{ category.name }}</span>
+                <span class="text-xs text-muted tabular-nums" data-count-for="{{ category.slug }}">{{ category.product_count }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="mb-3 text-xs font-medium tracking-wide text-muted uppercase">Harga</legend>
+          <div class="flex flex-col gap-2.5">
+            <label class="flex cursor-pointer items-center gap-3 text-sm text-body transition hover:text-white">
+              <input type="radio" name="price_range" value="" class="control" {% if not params.price_range and not custom_price %}checked{% endif %}>
+              Semua harga
+            </label>
+            {% for value, label in price_ranges %}
+              <label class="flex cursor-pointer items-center gap-3 text-sm text-body transition hover:text-white">
+                <input type="radio" name="price_range" value="{{ value }}" class="control" {% if params.price_range == value %}checked{% endif %}>
+                {{ label }}
+              </label>
+            {% endfor %}
+          </div>
+          <div class="mt-4 flex items-center gap-2">
+            <label class="min-w-0 flex-1">
+              <span class="sr-only">Harga minimum</span>
+              <input type="number" name="min_price" min="0" step="500" inputmode="numeric" placeholder="Min"
+                     value="{% if custom_price and params.min_price is not None %}{{ params.min_price }}{% endif %}" data-price-input
+                     class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none">
+            </label>
+            <span class="text-muted" aria-hidden="true">–</span>
+            <label class="min-w-0 flex-1">
+              <span class="sr-only">Harga maksimum</span>
+              <input type="number" name="max_price" min="0" step="500" inputmode="numeric" placeholder="Maks"
+                     value="{% if custom_price and params.max_price is not None %}{{ params.max_price }}{% endif %}" data-price-input
+                     class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none">
+            </label>
+          </div>
+          <p class="mt-2 text-xs text-muted">Isi sendiri harga minimum dan maksimum (Rp).</p>
+        </fieldset>
+
+        <fieldset>
+          <legend class="mb-3 text-xs font-medium tracking-wide text-muted uppercase">Lokasi</legend>
+          <input type="text" name="location" value="{{ params.location }}" placeholder="Contoh: Depok"
+                 class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-muted focus:border-white/25 focus:outline-none">
+        </fieldset>
+
+        <label class="flex cursor-pointer items-center justify-between gap-3 text-sm text-body">
+          Tersedia saja
+          <input type="checkbox" name="in_stock" value="1" class="peer sr-only" {% if params.in_stock %}checked{% endif %}>
+          <span class="relative h-6 w-10 rounded-full bg-white/15 transition peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-focus after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4" aria-hidden="true"></span>
+        </label>
+
+        <noscript><button type="submit" class="btn btn-primary btn-sm">Terapkan</button></noscript>
+
+        <div class="fixed inset-x-0 bottom-0 border-t border-line bg-canvas/80 p-4 backdrop-blur-xl {% if map_view %}sm:right-auto sm:w-96{% else %}lg:hidden{% endif %}">
+          <button type="button" data-close-filters class="w-full rounded-full bg-white py-3 text-sm font-medium text-ink">
+            Tampilkan <span data-result-count>{{ page_obj.paginator.count }}</span> produk
+          </button>
+        </div>
+      </form>
+    </aside>
+
+    <div id="catalog-content" class="min-w-0 transition-opacity duration-200" aria-live="polite">
+      {% include 'marketplace/_catalog_content.html' %}
+    </div>
+
+    {% if map_view %}
+      <div class="order-first lg:order-none">
+        <div id="catalog-map" class="relative isolate z-0 h-[55vh] overflow-hidden rounded-[28px] ring-1 ring-white/10 lg:sticky lg:top-24 lg:h-[calc(100vh-7.5rem)]" aria-label="Peta produk"></div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% include 'marketplace/_card_scripts.html' %}
+<script>
+  (function () {
+    const form = document.getElementById('catalog-filter');
+    const content = document.getElementById('catalog-content');
+    const panel = document.getElementById('filter-panel');
+    if (!form || !content) return;
+    const searchInput = document.querySelector('input[form="catalog-filter"][name="q"]');
+    let timer;
+    let controller;
+
+    async function load(url) {
+      if (controller) controller.abort();
+      controller = new AbortController();
+      content.classList.add('opacity-50');
+      try {
+        const response = await fetch(url, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error(response.statusText);
+        const data = await response.json();
+        content.innerHTML = data.content_html;
+        document.dispatchEvent(new CustomEvent('catalog:updated'));
+        form.querySelectorAll('[data-count-for]').forEach(function (el) {
+          el.textContent = data.facets[el.dataset.countFor] ?? 0;
+        });
+        document.querySelectorAll('[data-result-count]').forEach(function (el) {
+          el.textContent = data.total;
+        });
+        history.replaceState(null, '', url);
+      } catch (error) {
+        if (error.name !== 'AbortError') location.href = url;
+      } finally {
+        content.classList.remove('opacity-50');
+      }
+    }
+
+    function formUrl() {
+      const params = new URLSearchParams(new FormData(form));
+      for (const [key, value] of [...params]) if (!value) params.delete(key);
+      const query = params.toString();
+      return query ? `${location.pathname}?${query}` : location.pathname;
+    }
+
+    function refresh(delay) {
+      clearTimeout(timer);
+      timer = setTimeout(() => load(formUrl()), delay);
+    }
+
+    function setCategories(slugs) {
+      form.querySelectorAll('input[name="category"]').forEach(function (box) {
+        box.checked = slugs.includes(box.value);
+      });
+    }
+
+    form.addEventListener('change', () => refresh(0));
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      refresh(0);
+    });
+    form.querySelector('input[name="location"]').addEventListener('input', () => refresh(350));
+
+    // Harga min/maks diisi sendiri -> pilihan rentang harga dilepas, begitu juga sebaliknya.
+    const priceInputs = form.querySelectorAll('[data-price-input]');
+    priceInputs.forEach(function (input) {
+      input.addEventListener('input', function () {
+        form.querySelectorAll('input[name="price_range"]').forEach((radio) => (radio.checked = false));
+        refresh(450);
+      });
+    });
+    form.querySelectorAll('input[name="price_range"]').forEach(function (radio) {
+      radio.addEventListener('change', () => priceInputs.forEach((input) => (input.value = '')));
+    });
+    searchInput.addEventListener('input', function () {
+      // Ada kata kunci -> urutkan paling relevan, seperti marketplace pada umumnya.
+      form.elements.sort.value = searchInput.value.trim() ? 'relevance' : 'newest';
+      refresh(350);
+    });
+
+    content.addEventListener('click', function (event) {
+      const tab = event.target.closest('[data-tab]');
+      const remove = event.target.closest('[data-remove-param]');
+      const clear = event.target.closest('[data-clear-filters]');
+      const pageLink = event.target.closest('[data-page-link]');
+
+      if (tab) {
+        setCategories(tab.dataset.tab ? [tab.dataset.tab] : []);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        refresh(0);
+      } else if (remove) {
+        const { removeParam, removeValue: value } = remove.dataset;
+        if (removeParam === 'q') searchInput.value = '';
+        removeParam.split(' ').forEach((param) => form.querySelectorAll(`[name="${param}"]`).forEach(function (input) {
+          if (input.type === 'checkbox') {
+            if (!value || input.value === value) input.checked = false;
+          } else if (input.type === 'radio') {
+            input.checked = input.value === '';
+          } else {
+            input.value = '';
+          }
+        }));
+        refresh(0);
+      } else if (clear) {
+        searchInput.value = '';
+        setCategories([]);
+        form.querySelectorAll('input[type="text"]').forEach((input) => (input.value = ''));
+        form.querySelectorAll('input[name="in_stock"]').forEach((input) => (input.checked = false));
+        form.querySelector('input[name="price_range"][value=""]').checked = true;
+        form.elements.sort.value = 'newest';
+        refresh(0);
+      } else if (pageLink) {
+        event.preventDefault();
+        load(pageLink.href);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    document.querySelectorAll('[data-open-filters]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        panel.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      });
+    });
+    document.querySelectorAll('[data-close-filters]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        panel.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      });
+    });
+  })();
+</script>
+{% if map_view %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  (function () {
+    const el = document.getElementById('catalog-map');
+    if (!el || !window.L) return;
+
+    const map = L.map(el, { zoomControl: false, scrollWheelZoom: true }).setView([-6.3, 106.82], 10);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      attribution: 'Citra &copy; Esri',
+    }).addTo(map);
+
+    const layer = L.layerGroup().addTo(map);
+    const markers = new Map();
+
+    function shortPrice(price) {
+      if (price >= 1000000) return `Rp${(price / 1000000).toFixed(1).replace('.0', '')}jt`;
+      if (price >= 1000) return `Rp${Math.round(price / 1000)}rb`;
+      return `Rp${price}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function popupHtml(point) {
+      const photo = point.photo
+        ? `<img src="${escapeHtml(point.photo)}" alt="" class="map-card-photo">`
+        : '<div class="map-card-photo"></div>';
+      return `<a href="${point.url}" class="map-card">${photo}
+        <span class="map-card-body">
+          <span class="map-card-name">${escapeHtml(point.name)}</span>
+          <span class="map-card-price">Rp${point.price.toLocaleString('id-ID')} / ${escapeHtml(point.unit)}</span>
+          <span class="map-card-meta">${escapeHtml(point.location)}${point.available ? '' : ' · Habis'}</span>
+        </span></a>`;
+    }
+
+    function render() {
+      const source = document.getElementById('map-points');
+      const points = source ? JSON.parse(source.textContent) : [];
+      layer.clearLayers();
+      markers.clear();
+      points.forEach(function (point) {
+        const icon = L.divIcon({
+          className: '',
+          html: `<span class="price-pin ${point.available ? '' : 'is-sold-out'}" data-pin="${point.id}">${shortPrice(point.price)}</span>`,
+          iconSize: null,
+          iconAnchor: [28, 16],
+        });
+        const marker = L.marker([point.lat, point.lng], { icon, riseOnHover: true })
+          .bindPopup(popupHtml(point), { closeButton: false, className: 'map-popup', offset: [0, -12] })
+          .addTo(layer);
+        marker.on('mouseover', () => highlightCard(point.id, true));
+        marker.on('mouseout', () => highlightCard(point.id, false));
+        markers.set(String(point.id), marker);
+      });
+      if (points.length) {
+        map.fitBounds(L.latLngBounds(points.map((p) => [p.lat, p.lng])), { padding: [48, 48], maxZoom: 14 });
+      }
+    }
+
+    function highlightPin(id, active) {
+      const marker = markers.get(String(id));
+      const pin = marker?.getElement()?.querySelector('.price-pin');
+      if (!pin) return;
+      pin.classList.toggle('is-active', active);
+      marker.setZIndexOffset(active ? 1000 : 0);
+    }
+
+    function highlightCard(id, active) {
+      document.querySelector(`[data-product-id="${id}"]`)?.classList.toggle('ring-brand', active);
+    }
+
+    // Kartu disorot -> label harga di peta ikut menyala.
+    const content = document.getElementById('catalog-content');
+    content.addEventListener('mouseover', function (event) {
+      const card = event.target.closest('[data-product-id]');
+      if (card) highlightPin(card.dataset.productId, true);
+    });
+    content.addEventListener('mouseout', function (event) {
+      const card = event.target.closest('[data-product-id]');
+      if (card && !card.contains(event.relatedTarget)) highlightPin(card.dataset.productId, false);
+    });
+
+    document.addEventListener('catalog:updated', render);
+    render();
+  })();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+<div class="relative" data-carousel>
+  <div class="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto px-4 pt-2 pb-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-track>
+    {% for product in products %}
+      <div class="w-[72%] shrink-0 snap-start sm:w-[44%] md:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-3.75rem)/4)]">
+        {% include 'marketplace/_product_card.html' %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
