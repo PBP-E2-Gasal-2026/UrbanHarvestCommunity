@@ -12,6 +12,20 @@ permissions:
   contents: read
 
 jobs:
+  check-css:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check generated styles are up to date
+        run: |
+          npm run build:css
+          git diff --exit-code -- static/css/style.css
+
   ruff-linter:
     runs-on: ubuntu-latest
     steps:

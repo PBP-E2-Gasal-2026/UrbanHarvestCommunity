@@ -64,7 +64,13 @@
   if (window.L) {
     map = L.map('map', { zoomControl: false }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
     L.control.zoom({ position: 'topright', zoomInTitle: 'Perbesar', zoomOutTitle: 'Perkecil' }).addTo(map);
-    L.tileLayer(TILE_URL, { maxZoom: 19, attribution: TILE_ATTRIBUTION, className: 'map-tiles' }).addTo(map);
+    L.tileLayer(TILE_URL, {
+      maxZoom: 19,
+      attribution: TILE_ATTRIBUTION,
+      className: 'map-tiles',
+      // OSM requires Referer; override Django's same-origin policy for tiles only.
+      referrerPolicy: 'strict-origin-when-cross-origin'
+    }).addTo(map);
     layer = L.layerGroup().addTo(map);
   } else {
     $('map-fallback').hidden = false;
