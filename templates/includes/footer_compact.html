@@ -1,10 +1,11 @@
 <footer class="border-t border-line">
   <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
     <p>&copy; {% now "Y" %} Urban Harvest Community</p>
-    <nav class="flex gap-5" aria-label="Tautan footer">
+    <nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label="Tautan footer">
       <a href="{% url 'main:show_main' %}" class="transition hover:text-white">Beranda</a>
       <a href="{% url 'marketplace:catalog' %}" class="transition hover:text-white">Marketplace</a>
-      {% if user.is_authenticated %}<a href="{% url 'marketplace:orders' %}" class="transition hover:text-white">Pesanan</a>{% endif %}
+      <a href="{% url 'community_forum:show_community' %}" class="transition hover:text-white">Komunitas</a>
+      <a href="{% url 'map_module:map' %}" class="transition hover:text-white">Peta Kebun</a>
     </nav>
   </div>
 </footer>

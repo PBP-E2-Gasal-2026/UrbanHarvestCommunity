@@ -18,7 +18,8 @@
         {% block content %}{% endblock %}
     </main>
 
-    {% block footer %}{% include 'includes/footer.html' %}{% endblock %}
+    {# Footer besar hanya di landing; halaman lain memakai footer ringkas. #}
+    {% block footer %}{% include 'includes/footer_compact.html' %}{% endblock %}
 
     {% block extra_js %}{% endblock %}
 

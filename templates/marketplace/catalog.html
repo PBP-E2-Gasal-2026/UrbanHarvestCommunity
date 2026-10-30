@@ -6,7 +6,7 @@
 {% if map_view %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">{% endif %}
 {% endblock %}
 
-{% block footer %}{% if not map_view %}{% include 'marketplace/_footer_compact.html' %}{% endif %}{% endblock %}
+{% block footer %}{% if not map_view %}{% include 'includes/footer_compact.html' %}{% endif %}{% endblock %}
 
 {% block content %}
 <section class="mx-auto {% if map_view %}max-w-[100rem]{% else %}max-w-7xl{% endif %} px-4 pt-32 pb-24 sm:px-6 lg:px-8">
