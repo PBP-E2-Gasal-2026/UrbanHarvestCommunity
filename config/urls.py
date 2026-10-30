@@ -26,6 +26,7 @@ urlpatterns = [
     path('map/', include('map_module.urls')),
     path('llm-search/', include('llm_searching.urls')),
     path('admin/', admin.site.urls),
+    path('forum/', include('community_forum.urls')),
 ]
 
 if settings.DEBUG:

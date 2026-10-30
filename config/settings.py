@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main',
     'authentication',
+    'community_forum',
     'marketplace',
     'map_module',
     'llm_searching',
